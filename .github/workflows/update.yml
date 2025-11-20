@@ -1,0 +1,67 @@
+name: Apply template update
+
+on:
+  pull_request:
+    types: [labeled]
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    if: |
+      github.event.pull_request.state == 'open' &&
+      contains(github.event.pull_request.labels.*.name, 'template')
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CAMIA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMIA_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.ORGANIZATION }}
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Set up Git for HTTPS authentication
+        run: |
+          git config --global credential.username x-access-token
+          git config --global credential.helper '!f() { test "$1" = get && echo "password=$CAMIA_GITHUB_TOKEN"; }; f'
+        env:
+          CAMIA_GITHUB_TOKEN: ${{steps.generate-token.outputs.token}}
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+      - run: python -m pip install copier copier_templates_extensions
+      - name: Run Copier update
+        run: timeout 60 copier update --trust --skip-answered --defaults --answers-file .copier-answers.yml
+        env:
+          CAMIA_GITHUB_TOKEN: ${{steps.generate-token.outputs.token}}
+      - name: Run pre-commit (remote hooks only)
+        uses: pre-commit/action@v3.0.1
+        continue-on-error: true
+        with:
+          extra_args: run --hook-stage pre-commit --all-files
+      - name: Configure Git user
+        run: |
+          git config user.name camia
+          git config user.email 171275529+camia[bot]@users.noreply.github.com
+      - name: Upload changes to GitHub (including conflicts)
+        run: |
+          git add --all
+          git commit -m "Apply template updates" || exit 0
+      - name: Push changes to remote
+        run: git push -u origin ${{ github.head_ref }}
+      - name: Add comment to pull request
+        run: gh issue comment "$NUMBER" --body "$BODY"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.number }}
+          BODY: |
+            ## Template Update
+            |                   |                         |
+            |-------------------|-------------------------|
+            | **Status**        | ✅  Update successful! |

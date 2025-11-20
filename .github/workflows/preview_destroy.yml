@@ -1,0 +1,44 @@
+name: preview-destroy
+
+on:
+  pull_request:
+    types: [closed]
+
+jobs:
+  destroy:
+    name: Destroy
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CAMIA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMIA_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.ORGANIZATION }}
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+      - name: Initialise Terraform workspace
+        run: terraform -chdir="./terraform" init
+      - name: Select workspace
+        continue-on-error: true
+        id: select-workspace
+        run: terraform -chdir="./terraform" workspace select ${{ github.event.repository.name }}-${{ github.event.number }}
+      - name: Destroy resources
+        if: ${{ steps.select-workspace.outcome == 'success' }}
+        run: |
+          terraform -chdir="./terraform" destroy -var pull_request=${{ github.event.number }} --auto-approve
+          terraform -chdir="./terraform" workspace select default
+          terraform -chdir="./terraform" workspace delete ${{ github.event.repository.name }}-${{ github.event.number }}

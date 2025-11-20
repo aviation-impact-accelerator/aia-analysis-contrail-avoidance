@@ -1,0 +1,107 @@
+[project]
+name = "aia-model-contrial-avoidance"
+version = "0.1.0"
+description = "Engine for modelling navigational contrail avoidance"
+authors = [
+    { name = "Sam Brockie", email = "sgb39@cam.ac.uk" },
+    { name = "Jia Wei Kho", email = "jwk33@cam.ac.uk" },
+]
+requires-python = ">=3.12"
+readme = "README.md"
+dependencies = ["camia-model>=0.6.4,<0.7", "camia-engine>=0.4.4,<0.5"]
+
+[project.urls]
+Repository = "https://github.com/s-ana-314/aia-model-contrial-avoidance"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.0.1,<5",
+    "ruff>=0.12.2,<0.13",
+    "mypy>=1.13.0,<2",
+    "pytest>=8.3.3,<9",
+    "pytest-camia>=0.3.0,<0.4",
+]
+docs = [
+    "mkdocs-material>=9.5.44,<10",
+    "mkdocs-prebuild>=0.5.0,<0.6",
+    "mkdocstrings-python>=1.12.2,<2",
+    "markdown-exec>=1.9.3,<2",
+    "black>=25.0.0,<26",
+    "camia-report>=0.2.2,<0.3",
+]
+
+[tool.uv]
+default-groups = ["dev", "docs"]
+
+[[tool.uv.index]]
+name = "gitlab"
+url = "https://gitlab.developers.cam.ac.uk/api/v4/projects/8115/packages/pypi/simple"
+publish-url = "https://gitlab.developers.cam.ac.uk/api/v4/projects/8115/packages/pypi"
+
+[tool.mypy]
+mypy_path = "src"
+plugins = "camia_model.plugin.mypy"
+strict = true
+
+[tool.pytest.ini_options]
+addopts = [
+    "--doctest-modules",
+    "--doctest-continue-on-failure",
+    "--import-mode=importlib",
+]
+doctest_optionflags = ["NORMALIZE_WHITESPACE"]
+testpaths = ["src", "tests"]
+xfail_strict = true
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.format]
+docstring-code-format = true
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    "ANN1",
+    "COM812",
+    "COM819",
+    "D206",
+    "D300",
+    "E111",
+    "E114",
+    "E117",
+    "E501",
+    "ISC001",
+    "ISC002",
+    "Q000",
+    "Q001",
+    "Q002",
+    "Q003",
+    "W191",
+]
+
+[tool.ruff.lint.flake8-pytest-style]
+fixture-parentheses = false
+mark-parentheses = false
+parametrize-values-type = "tuple"
+
+[tool.ruff.lint.flake8-type-checking]
+runtime-evaluated-decorators = [
+    "camia_model.dataclasses.dataclass",
+    "camia_model.transform",
+    "camia_model.transform.switch",
+]
+
+[tool.ruff.lint.isort]
+required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["D1", "INP001", "S101"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

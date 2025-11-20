@@ -1,0 +1,57 @@
+name: report
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+  workflow_dispatch:
+
+jobs:
+  build-report-pdf:
+    name: Build Report PDF
+    if: |
+      github.event.pull_request.state == 'open' &&
+      contains(github.event.pull_request.labels.*.name, 'report')
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        include:
+          - config-filepath: "report_config.yml"
+            output-name: "report"
+    container:
+      image: ghcr.io/aviation-impact-accelerator/camia-report:0.1.3
+      credentials:
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v2
+        with:
+          app-id: ${{ vars.CAMIA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMIA_BOT_PRIVATE_KEY }}
+          owner: ${{ github.repository_owner }}
+      - name: Check out code
+        uses: actions/checkout@v4
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+      - name: Install dependencies
+        run: uv sync
+        env:
+          UV_INDEX_GITLAB_USERNAME: ${{ vars.GITLAB_PACKAGE_REGISTRY_TOKEN_NAME }}
+          UV_INDEX_GITLAB_PASSWORD: ${{ secrets.GITLAB_PACKAGE_REGISTRY_TOKEN }}
+      - name: Configure Git credentials to access private repositories
+        run: git config --global url.https://x-access-token:${{ steps.generate-token.outputs.token }}@github.com/.insteadOf https://github.com/
+      - name: Build Report PDF
+        run: camia-report ${{ matrix.config-filepath }} --output-name ${{ matrix.output-name }}
+      - name: Save PDF file artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.output-name }}-INTERNAL-USE-ONLY.pdf
+          path: report/${{ matrix.output-name }}-INTERNAL-USE-ONLY.pdf

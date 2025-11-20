@@ -1,0 +1,125 @@
+name: preview
+
+on:
+  pull_request:
+    types: [opened, reopened, synchronize, labeled]
+
+permissions:
+  actions: write
+
+jobs:
+  duplicate-check:
+    name: Check for duplicates
+    if: |
+      github.event.pull_request.state == 'open' &&
+      contains(github.event.pull_request.labels.*.name, 'preview')
+    runs-on: ubuntu-latest
+    outputs:
+      should_skip: ${{ steps.skip_check.outputs.should_skip }}
+    steps:
+      - id: skip_check
+        uses: fkirc/skip-duplicate-actions@v5
+        with:
+          concurrent_skipping: "same_content_newer"
+          skip_after_successful_duplicate: "true"
+          cancel_others: "true"
+  build:
+    name: Build documentation
+    if: needs.duplicate-check.outputs.should_skip != 'true'
+    needs: [duplicate-check]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CAMIA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMIA_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.ORGANIZATION }}
+      - name: Check out aia-model-contrial-avoidance
+        uses: actions/checkout@v4
+        with:
+          repository: aviation-impact-accelerator/aia-model-contrial-avoidance
+          submodules: recursive
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Update submodule specific to pull request
+        uses: actions/checkout@v4
+        with:
+          path: ${{ github.event.repository.name }}
+          ref: ${{ github.event.pull_request.head.sha }}
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: "uv.lock"
+      - name: "Set up Python"
+        uses: actions/setup-python@v5
+        with:
+          python-version-file: ".python-version"
+      - name: Install dependencies
+        run: uv sync
+        env:
+          UV_INDEX_GITLAB_USERNAME: ${{ vars.GITLAB_PACKAGE_REGISTRY_TOKEN_NAME }}
+          UV_INDEX_GITLAB_PASSWORD: ${{ secrets.GITLAB_PACKAGE_REGISTRY_TOKEN }}
+      - name: Run documentation build
+        run: uv run mkdocs build
+      - name: Save documentation site files
+        uses: actions/upload-artifact@v4
+        with:
+          name: aia-model-contrial-avoidance-${{ github.event.repository.name }}-${{ github.event.number }}
+          path: site
+  deploy:
+    name: Deploy documentation
+    needs: [build]
+    permissions:
+      id-token: write
+    runs-on: ubuntu-latest
+    steps:
+      - name: Generate a token
+        id: generate-token
+        uses: actions/create-github-app-token@v1
+        with:
+          app-id: ${{ vars.CAMIA_BOT_APP_ID }}
+          private-key: ${{ secrets.CAMIA_BOT_PRIVATE_KEY }}
+          owner: ${{ vars.ORGANIZATION }}
+      - name: Check out code
+        uses: actions/checkout@v4
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_IAM_ROLE_ARN }}
+          role-session-name: GitHub_to_AWS_via_FederatedOIDC
+          aws-region: ${{ vars.AWS_REGION }}
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+      - run: terraform -chdir="./terraform" init
+      - name: Switch Terraform workspace
+        run: terraform -chdir="./terraform" workspace select -or-create ${{ github.event.repository.name }}-${{ github.event.number }}
+      - name: Provision AWS resources
+        id: provision-aws
+        run: |
+          terraform -chdir="./terraform" apply -var pull_request=${{ github.event.number }} -auto-approve
+          echo "SITE_URL=$(terraform -chdir="./terraform" output -raw site_url)" >> $GITHUB_OUTPUT
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: aia-model-contrial-avoidance-${{ github.event.repository.name }}-${{ github.event.number }}
+          path: aia-model-contrial-avoidance/
+      - name: Copy files to S3 bucket
+        run: aws s3 cp aia-model-contrial-avoidance/ s3://$(terraform -chdir="./terraform" output -raw s3_bucket_name) --recursive
+      - name: Add comment to pull request
+        run: gh issue comment "$NUMBER" --body "$BODY"
+        env:
+          GH_TOKEN: ${{ steps.generate-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          NUMBER: ${{ github.event.number }}
+          BODY: |
+            ## Docs Site Staged
+            |                   |                                                                                                             |
+            |-------------------|-------------------------------------------------------------------------------------------------------------|
+            | **Latest commit** | ${{ github.event.pull_request.head.sha }}                                                           |
+            | **Status**        | ✅  Deploy successful!                                                                                      |
+            | **Preview URL**   | [${{ steps.provision-aws.outputs.SITE_URL }}](https://${{ steps.provision-aws.outputs.SITE_URL }}) |
