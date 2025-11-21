@@ -31,6 +31,7 @@ dependencies = [
     { name = "camia-model" },
     { name = "cdsapi" },
     { name = "matplotlib" },
+    { name = "pandas" },
     { name = "pycontrails", extra = ["complete"] },
 ]
 
