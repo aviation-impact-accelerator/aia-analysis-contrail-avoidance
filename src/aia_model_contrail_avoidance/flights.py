@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import Any
+
 __all__ = (
     "flight_distance_from_location",
     "generate_synthetic_flight",
@@ -21,7 +23,7 @@ def generate_synthetic_flight(  # noqa: PLR0913
     departure_time: datetime.datetime,
     length_of_flight: float,
     flight_level: int,
-) -> dict[str, object]:
+) -> dict[str, Any]:
     """Generates synthetic flight from departure to arrival location as a series of timestamps.
 
     Args:
@@ -79,7 +81,7 @@ def flight_distance_from_location(
     )
     c = 2 * np.arcsin(np.sqrt(a))
 
-    return earth_radius * c
+    return float(earth_radius * c)
 
 
 def most_common_cruise_flight_level() -> int:
