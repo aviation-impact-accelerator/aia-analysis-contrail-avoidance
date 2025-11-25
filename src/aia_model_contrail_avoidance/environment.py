@@ -32,26 +32,17 @@ def calculate_effective_radiative_forcing(
     return total_erf_list
 
 
-def create_grid_environment() -> xr.DataArray:
+def create_grid_environment() -> xr.Dataset:
     """Creates grid environment from COSIP grid data."""
-    cocip_grid_dataarray = xr.open_dataset(
-        "./cosip_grid/cocipgrid_sample_result.nc", decode_timedelta=True
-    ).to_array()
-    cocip_grid_dataarray["time"] = pd.to_datetime(cocip_grid_dataarray["time"].values, utc=True)
-    # select relevant dimensions
-    return cocip_grid_dataarray[
-        [
-            "longitude",
-            "latitude",
-            "level",
-            "time",
-            "ef_per_m",
-        ]
-    ]
+    ds = xr.open_dataset("./cosip_grid/cocipgrid_sample_result.nc", decode_timedelta=True)
+
+    ds["time"] = pd.to_datetime(ds["time"].values)
+
+    return ds[["longitude", "latitude", "level", "time", "ef_per_m"]]
 
 
 def run_flight_data_through_environment(
-    flight_dataset: pd.DataFrame, environment: xr.DataArray
+    flight_dataset: pd.DataFrame, environment: xr.Dataset
 ) -> pd.DataFrame:
     """Runs flight data through environment to assign effective radiative forcing values.
 
@@ -65,9 +56,9 @@ def run_flight_data_through_environment(
     flight_level_vector = xr.DataArray(
         flight_dataset["flight_level"].values,
     )
-    time_vector = xr.DataArray(flight_dataset["timestamp"].values, dims="flight")
-    latitude_vector = xr.DataArray(flight_dataset["latitude"].values, dims="flight")
-    longitude_vector = xr.DataArray(flight_dataset["longitude"].values, dims="flight")
+    time_vector = xr.DataArray(flight_dataset["timestamp"].values)
+    latitude_vector = xr.DataArray(flight_dataset["latitude"].values)
+    longitude_vector = xr.DataArray(flight_dataset["longitude"].values)
 
     nearest_environment = environment.sel(
         level=flight_level_vector,
@@ -76,9 +67,8 @@ def run_flight_data_through_environment(
         longitude=longitude_vector,
         method="nearest",
     )
-    erf_values = nearest_environment["ef_per_m"].array.astype(float)
+    erf_values = nearest_environment["ef_per_m"].astype(float)
 
-    flight_dataset_with_erf = flight_dataset.copy()
-    flight_dataset_with_erf["erf"] = erf_values
+    flight_dataset["erf"] = erf_values
 
-    return flight_dataset_with_erf
+    return flight_dataset
