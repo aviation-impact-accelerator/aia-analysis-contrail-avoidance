@@ -8,12 +8,9 @@ __all__ = (
     "run_flight_data_through_environment",
 )
 
-from typing import TYPE_CHECKING
-
+import numpy as np
+import pandas as pd
 import xarray as xr
-
-if TYPE_CHECKING:
-    import pandas as pd
 
 
 def calculate_effective_radiative_forcing(
@@ -46,6 +43,37 @@ def create_grid_environment() -> xr.DataArray:
     return xr.DataArray(
         environment_dataset["ef_per_m"], dims=("longitude", "latitude", "level", "time")
     )
+
+
+def create_synthetic_grid_environment() -> xr.DataArray:
+    """Creates a synthetic grid environment for testing."""
+    latitudes = xr.DataArray(
+        list(range(49, 62)),  # linear increase from 49 to 61 degrees (UK airspace)
+    )
+    longitudes = xr.DataArray(
+        list(range(-8, 3)),  # linear increase from -8 to 2 degrees (UK airspace)
+    )
+    levels = xr.DataArray(
+        [250, 300, 350],  # flight levels in hPa
+    )
+    times = xr.DataArray(pd.date_range("2024-01-01", periods=24, freq="1H"))
+
+    ef_per_m = xr.DataArray(
+        np.zeros((len(times), len(levels), len(latitudes), len(longitudes))),
+        dims=("longitude", "latitude", "level", "time"),
+        coords={
+            "time": times,
+            "level": levels,
+            "latitude": latitudes,
+            "longitude": longitudes,
+        },
+    )
+
+    # Fill with synthetic data
+    ef_per_m.loc[{"level": 300}] = 0.5
+    ef_per_m.loc[{"level": 350}] = 1.0
+
+    return ef_per_m
 
 
 def run_flight_data_through_environment(
