@@ -48,25 +48,28 @@ def create_grid_environment() -> xr.DataArray:
 
 def create_synthetic_grid_environment() -> xr.DataArray:
     """Creates a synthetic grid environment for testing."""
-    latitudes = xr.DataArray(
-        list(range(49, 62)),  # linear increase from 49 to 61 degrees (UK airspace)
-    )
     longitudes = xr.DataArray(
         list(range(-8, 3)),  # linear increase from -8 to 2 degrees (UK airspace)
+        dims=("longitude"),
+    )
+    latitudes = xr.DataArray(
+        list(range(49, 62)),  # linear increase from 49 to 61 degrees (UK airspace)
+        dims=("latitude"),
     )
     levels = xr.DataArray(
         [250, 300, 350],  # flight levels in hPa
+        dims=("level"),
     )
-    times = xr.DataArray(pd.date_range("2024-01-01", periods=24, freq="1H"))
+    times = xr.DataArray(pd.date_range("2024-01-01", periods=24, freq="1h"), dims=("time"))
 
     ef_per_m = xr.DataArray(
-        np.zeros((len(times), len(levels), len(latitudes), len(longitudes))),
+        np.zeros((len(longitudes), len(latitudes), len(levels), len(times))),
         dims=("longitude", "latitude", "level", "time"),
         coords={
-            "time": times,
-            "level": levels,
-            "latitude": latitudes,
             "longitude": longitudes,
+            "latitude": latitudes,
+            "level": levels,
+            "time": times,
         },
     )
 
@@ -89,18 +92,19 @@ def run_flight_data_through_environment(
             values.
 
     """
+    longitude_vector = xr.DataArray(flight_dataset["longitude"].values, dims=["points"])
+    latitude_vector = xr.DataArray(flight_dataset["latitude"].values, dims=["points"])
     flight_level_vector = xr.DataArray(
         flight_dataset["flight_level"].values,
+        dims=["points"],
     )
-    time_vector = xr.DataArray(flight_dataset["timestamp"].values)
-    latitude_vector = xr.DataArray(flight_dataset["latitude"].values)
-    longitude_vector = xr.DataArray(flight_dataset["longitude"].values)
+    time_vector = xr.DataArray(flight_dataset["timestamp"].values, dims=["points"])
 
     nearest_environment = environment.sel(
+        longitude=longitude_vector,
+        latitude=latitude_vector,
         level=flight_level_vector,
         time=time_vector,
-        latitude=latitude_vector,
-        longitude=longitude_vector,
         method="nearest",
     )
 
