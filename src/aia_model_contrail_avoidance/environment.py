@@ -62,16 +62,23 @@ def run_flight_data_through_environment(
             values.
 
     """
-    flight_dataset_with_erf = flight_dataset.copy()
+    flight_level_vector = xr.DataArray(
+        flight_dataset["flight_level"].values,
+    )
+    time_vector = xr.DataArray(flight_dataset["timestamp"].values, dims="flight")
+    latitude_vector = xr.DataArray(flight_dataset["latitude"].values, dims="flight")
+    longitude_vector = xr.DataArray(flight_dataset["longitude"].values, dims="flight")
 
-    for idx, flight_segment in flight_dataset.iterrows():
-        nearest_environment = environment.sel(
-            level=flight_segment["flight_level"],
-            time=flight_segment["timestamp"],
-            latitude=flight_segment["latitude"],
-            longitude=flight_segment["longitude"],
-            method="nearest",
-        )
-        flight_dataset_with_erf.loc[idx, "erf"] = float(nearest_environment["ef_per_m"].item())
+    nearest_environment = environment.sel(
+        level=flight_level_vector,
+        time=time_vector,
+        latitude=latitude_vector,
+        longitude=longitude_vector,
+        method="nearest",
+    )
+    erf_values = nearest_environment["ef_per_m"].array.astype(float)
+
+    flight_dataset_with_erf = flight_dataset.copy()
+    flight_dataset_with_erf["erf"] = erf_values
 
     return flight_dataset_with_erf
