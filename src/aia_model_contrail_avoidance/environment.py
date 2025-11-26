@@ -14,24 +14,24 @@ import pandas as pd
 import xarray as xr
 
 
-def calculate_effective_radiative_forcing(
-    flight_id: int | list[int], flight_dataset_with_erf: pd.DataFrame
+def calculate_total_energy_forcing(
+    flight_id: int | list[int], flight_dataset_with_energy_forcing: pd.DataFrame
 ) -> float | list[float]:
-    """Calculates total effective radiative forcing for a flight or list of flights."""
+    """Calculates total energy forcing for a flight or list of flights."""
     if isinstance(flight_id, int):
         return float(
-            flight_dataset_with_erf.loc[
-                flight_dataset_with_erf["flight_id"] == flight_id, "erf"
+            flight_dataset_with_energy_forcing.loc[
+                flight_dataset_with_energy_forcing["flight_id"] == flight_id, "ef"
             ].sum()
         )
 
-    total_erf_list = []
+    total_energy_forcing_list = []
     for fid in flight_id:
-        total_erf = flight_dataset_with_erf.loc[
-            flight_dataset_with_erf["flight_id"] == fid, "erf"
+        total_energy_forcing = flight_dataset_with_energy_forcing.loc[
+            flight_dataset_with_energy_forcing["flight_id"] == fid, "ef"
         ].sum()
-        total_erf_list.append(total_erf)
-    return total_erf_list
+        total_energy_forcing_list.append(total_energy_forcing)
+    return total_energy_forcing_list
 
 
 def create_grid_environment() -> xr.DataArray:
