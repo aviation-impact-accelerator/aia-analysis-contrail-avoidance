@@ -1,4 +1,4 @@
-"""Tests for generating environment and erf data."""
+"""Tests for generating environment and ef data."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import datetime
 import pytest
 
 from aia_model_contrail_avoidance.environment import (
-    calculate_effective_radiative_forcing,
+    calculate_total_energy_forcing,
     create_grid_environment,
     create_synthetic_grid_environment,
     run_flight_data_through_environment,
@@ -82,8 +82,8 @@ def test_run_flight_data_through_environment() -> None:
     )
 
     flight_with_erf = run_flight_data_through_environment(sample_flight_dataframe, environment)
-    assert "erf" in flight_with_erf.columns
-    assert not flight_with_erf["erf"].isnull().any()
+    assert "ef" in flight_with_erf.columns
+    assert not flight_with_erf["ef"].isnull().any()
 
 
 @pytest.mark.parametrize(
@@ -95,7 +95,7 @@ def test_run_flight_data_through_environment() -> None:
     ),
 )
 def test_calculate_effective_radiative_forcing(flight_level: int, expected_total_ef: float) -> None:
-    """Validate the total effective radiative forcing from sample synthetic flights.
+    """Validate the total energy forcing from sample synthetic flights.
 
     Note: the Ef is wrong by a conversion factor from meters to nautical miles.
     The main aim of this test is to determine if the functions are correctly sampling the
@@ -116,7 +116,7 @@ def test_calculate_effective_radiative_forcing(flight_level: int, expected_total
         flight_level=flight_level,
     )
 
-    flight_with_erf = run_flight_data_through_environment(sample_flight_dataframe, environment)
+    flight_with_ef = run_flight_data_through_environment(sample_flight_dataframe, environment)
 
-    total_ef = calculate_effective_radiative_forcing(1, flight_with_erf)
+    total_ef = calculate_total_energy_forcing(1, flight_with_ef)
     assert total_ef == pytest.approx(expected_total_ef, rel=0.05)
