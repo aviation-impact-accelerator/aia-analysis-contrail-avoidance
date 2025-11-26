@@ -14,7 +14,7 @@ def list_of_uk_airports() -> list[str]:
     return uk_airports["icao"].tolist()
 
 
-def uk_regional_flights(flight_data: pd.DataFrame) -> int:
+def uk_regional_flights(flight_data: pd.DataFrame) -> pd.DataFrame:
     """Return the regional flights in the UK airport data."""
     list_of_uk_airports_icao = list_of_uk_airports()
     return flight_data[
