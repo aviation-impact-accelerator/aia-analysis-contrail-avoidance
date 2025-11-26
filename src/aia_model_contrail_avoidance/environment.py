@@ -88,7 +88,7 @@ def run_flight_data_through_environment(
     Args:
         flight_dataset: DataFrame containing flight data with latitude, longitude, timestamp, and
             flight level.
-        environment: xarray DataArray containing environmental data with effective radiative forcing
+        environment: xarray DataArray containing environmental data with energy forcing per meter
             values.
 
     """
@@ -108,6 +108,6 @@ def run_flight_data_through_environment(
         method="nearest",
     )
 
-    flight_dataset["erf"] = nearest_environment.astype(float)
+    flight_dataset["ef"] = nearest_environment.astype(float)
 
     return flight_dataset
