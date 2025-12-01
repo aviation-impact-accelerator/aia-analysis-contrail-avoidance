@@ -57,6 +57,7 @@ def generate_synthetic_flight(  # noqa: PLR0913
             "latitude": latitudes,
             "longitude": longitudes,
             "flight_level": np.full(number_of_timestamps, flight_level, dtype=int),
+            "distance_flown_in_segment": np.full(number_of_timestamps, 1.0, dtype=float),
         }
     )
 
