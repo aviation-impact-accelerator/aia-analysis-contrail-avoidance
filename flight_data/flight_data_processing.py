@@ -35,15 +35,15 @@ def generate_flight_dataframe_from_adsb_data() -> pd.DataFrame:
         prev_lat = group["latitude"].shift()
         prev_lon = group["longitude"].shift()
 
-        distances = []
-        for idx, (_curr_idx, row) in enumerate(group.iterrows()):
+        distances: list[float] = []
+        for idx, (_, row) in enumerate(group.iterrows()):
             if idx == 0 or pd.isna(prev_lat.iloc[idx]):
-                distances.append(0)
+                distances.append(0.0)
             else:
                 distance = flight_distance_from_location(
                     (row["latitude"], row["longitude"]), (prev_lat.iloc[idx], prev_lon.iloc[idx])
                 )
-                distances.append(distance)
+                distances.append(float(distance))
         return pd.Series(distances, index=group.index)
 
     flight_dataframe["distance_flown_in_segment"] = flight_dataframe.groupby(
