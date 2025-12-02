@@ -46,13 +46,20 @@ regional_departure_arrival_pairs = (
 )
 # --- Complete flights ---
 
-df = flight_dataframe.copy()
-df["timestamp"] = pd.to_datetime(df["timestamp"], errors="coerce").dt.tz_localize(None)
-df["takeoff_time"] = pd.to_datetime(df["takeoff_time"], errors="coerce").dt.tz_localize(None)
-df["landing_time"] = pd.to_datetime(df["landing_time"], errors="coerce").dt.tz_localize(None)
+flight_dataframe_copy = flight_dataframe.copy()
+flight_dataframe_copy["timestamp"] = pd.to_datetime(
+    flight_dataframe_copy["timestamp"], errors="coerce"
+).dt.tz_localize(None)
+flight_dataframe_copy["takeoff_time"] = pd.to_datetime(
+    flight_dataframe_copy["takeoff_time"], errors="coerce"
+).dt.tz_localize(None)
+flight_dataframe_copy["landing_time"] = pd.to_datetime(
+    flight_dataframe_copy["landing_time"], errors="coerce"
+).dt.tz_localize(None)
 
-complete_flights_df = df[
-    (df["takeoff_time"] > timeframe_first) & (df["landing_time"] < timeframe_last)
+complete_flights_df = flight_dataframe_copy[
+    (flight_dataframe_copy["takeoff_time"] > timeframe_first)
+    & (flight_dataframe_copy["landing_time"] < timeframe_last)
 ]
 
 number_of_complete_flights = complete_flights_df["flight_id"].nunique()
