@@ -8,7 +8,11 @@ from aia_model_contrail_avoidance.flights import flight_distance_from_location
 
 
 def generate_flight_dataframe_from_adsb_data() -> pd.DataFrame:
-    """Reads ADS-B flight data into a DataFrame and creates new columns.
+    """Reads ADS-B flight data into a DataFrame and creates new columns required for analysis.
+
+    New columns added:
+    - flight_level: Altitude in flight levels (altitude_baro divided by 100)
+    - distance_flown_in_segment: Distance traveled in meters between consecutive datapoints for the same flight
 
     Returns:
         DataFrame containing ADS-B flight data.
@@ -27,6 +31,12 @@ def generate_flight_dataframe_from_adsb_data() -> pd.DataFrame:
         "arrival_airport_icao",
     ]
     flight_dataframe = flight_dataframe[needed_columns]
+
+    # Divide altitude_baro by 100 to convert from pha to flight level
+    flight_dataframe["altitude_baro"] = flight_dataframe["altitude_baro"] // 100.0
+
+    # Rename altitude_baro to flight_level
+    flight_dataframe = flight_dataframe.rename(columns={"altitude_baro": "flight_level"})
 
     # order by flight id and append distance_flown_in_segment for each datapoint by comparing it to previous with the same flightid
     flight_dataframe = flight_dataframe.sort_values(by=["flight_id", "timestamp"])
@@ -47,7 +57,8 @@ def generate_flight_dataframe_from_adsb_data() -> pd.DataFrame:
         return pd.Series(distances, index=group.index)
 
     flight_dataframe["distance_flown_in_segment"] = flight_dataframe.groupby(
-        "flight_id", group_keys=False
+        "flight_id",
+        group_keys=False,
     ).apply(calculate_segment_distance)
 
     return flight_dataframe
