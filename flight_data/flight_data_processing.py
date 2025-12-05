@@ -64,17 +64,34 @@ def generate_flight_dataframe_from_adsb_data() -> pd.DataFrame:
     return flight_dataframe
 
 
-dataframe = generate_flight_dataframe_from_adsb_data()
+def process_adsb_flight_data(generated_dataframe: pd.DataFrame, save_filename: str) -> None:
+    """Process ADS-B flight data and save cleaned DataFrame to parquet.
 
-# show variation in distance flown between rows
-print(dataframe["distance_flown_in_segment"].describe())
+    Removes datapoints with low flight levels (near or on ground) or zero distance flown between time intervals.
 
-# remove datapoints where distance flown in segment is zero within 1 percent tolerance
-dataframe_processed = dataframe[dataframe["distance_flown_in_segment"] > 0.00]
+    Args:
+        generated_dataframe: DataFrame containing raw ADS-B flight data.
+        save_filename: Filename (without extension) to save the processed DataFrame.
+    """
+    # Remove datapoints where flight level is none or negative
+    dataframe_processed = generated_dataframe[
+        generated_dataframe["flight_level"].notna() & (generated_dataframe["flight_level"] >= 0)
+    ]
 
-# percentage of datapoints removed
-removed_percentage = (1 - len(dataframe_processed) / len(dataframe)) * 100
-print(f"Removed {removed_percentage:.2f}% of datapoints with zero distance flown in segment.")
+    # Remove datapoints where distance flown in segment is zero
+    dataframe_processed = dataframe_processed[dataframe_processed["distance_flown_in_segment"] > 0]
 
-# save processed dataframe to parquet for faster loading next time
-dataframe_processed.to_parquet("2024_01_01_sample_processed.parquet")
+    # percentage of datapoints removed
+    percentage_removed = 100 * (1 - len(dataframe_processed) / len(generated_dataframe))
+    print(
+        f"INFO: Removed {percentage_removed:.2f}% of datapoints due to low flight level or zero distance flown"
+    )
+    # Save processed dataframe to parquet
+    dataframe_processed.to_parquet("data/" + save_filename + ".parquet", index=False)
+
+
+if __name__ == "__main__":
+    dataframe = generate_flight_dataframe_from_adsb_data()
+    save_filename = "2024_01_01_sample_processed"
+
+    process_adsb_flight_data(dataframe, save_filename)
