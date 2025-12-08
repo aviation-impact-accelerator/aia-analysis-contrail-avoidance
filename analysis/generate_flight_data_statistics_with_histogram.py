@@ -110,6 +110,16 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
         planes_per_hour = flight_dataframe_copy.groupby("hour")["flight_id"].nunique().to_dict()
         planes_per_hour_histogram = {str(hour): planes_per_hour.get(hour, 0) for hour in range(24)}
 
+    distance_flown_per_hour_histogram = None
+    if "timestamp" in flight_dataframe.columns and distance_col in flight_dataframe.columns:
+        # Extract hour from timestamp
+        flight_dataframe_copy = flight_dataframe.copy()
+        flight_dataframe_copy["hour"] = pd.to_datetime(flight_dataframe_copy["timestamp"]).dt.hour
+        distance_per_hour = flight_dataframe_copy.groupby("hour")[distance_col].sum().to_dict()
+        distance_flown_per_hour_histogram = {
+            str(hour): distance_per_hour.get(hour, 0) for hour in range(24)
+        }
+
     # --- Build summary ---
     stats = {
         "file_name": parquet_file_name,
@@ -128,6 +138,7 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
         "altitude_baro_histogram": altitude_histogram,
         "distance_flown_by_altitude_histogram": distance_by_altitude_histogram,
         "planes_per_hour_histogram": planes_per_hour_histogram,
+        "distance_flown_per_hour_histogram": distance_flown_per_hour_histogram,
     }
 
     # --- Write output ---
