@@ -67,7 +67,20 @@ def generate_energy_forcing_statistics(
         "counts": hist_counts.tolist(),
         "cumulative_counts": cumulative_counts.tolist(),
     }
-
+    # distance flown per hpour of the day
+    distance_flown_per_hour_histogram = None
+    if (
+        "timestamp" in flight_dataframe.columns
+        and "distance_flown_in_segment" in flight_dataframe.columns
+    ):
+        flight_dataframe_copy = flight_dataframe.copy()
+        flight_dataframe_copy["hour"] = pd.to_datetime(flight_dataframe_copy["timestamp"]).dt.hour
+        distance_per_hour = (
+            flight_dataframe_copy.groupby("hour")["distance_flown_in_segment"].sum().to_dict()
+        )
+        distance_flown_per_hour_histogram = {
+            str(hour): distance_per_hour.get(hour, 0) for hour in range(24)
+        }
     # histogram of distance forming contrails per hour of the day
     if "timestamp" in contrail_forming_segments.columns:
         contrail_forming_segments_copy = contrail_forming_segments.copy()
@@ -115,6 +128,7 @@ def generate_energy_forcing_statistics(
         "energy_forcing_per_flight": {
             "histogram": ef_histogram,
         },
+        "distance_flown_per_hour_histogram": distance_flown_per_hour_histogram,
         "distance_forming_contrails_per_hour_histogram": distance_forming_contrails_per_hour_histogram,
     }
 
