@@ -1,5 +1,7 @@
 """Defines a function to plot the number of contrails formed per hour."""  # noqa: INP001
 
+from __future__ import annotations
+
 import json
 
 import matplotlib.pyplot as plt
