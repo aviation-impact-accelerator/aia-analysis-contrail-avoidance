@@ -27,6 +27,7 @@ name = "aia-model-contrail-avoidance"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
+    { name = "basemap" },
     { name = "camia-engine" },
     { name = "camia-model" },
     { name = "cartopy" },
@@ -56,6 +57,7 @@ docs = [
 
 [package.metadata]
 requires-dist = [
+    { name = "basemap", specifier = ">=2.0.0" },
     { name = "camia-engine", specifier = ">=0.4.4,<0.5" },
     { name = "camia-model", specifier = ">=0.6.4,<0.7" },
     { name = "cartopy", specifier = ">=0.25.0" },
@@ -353,6 +355,39 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/eb/95/7118e935b0b0bd3f94dfec2d852fd4e4f4f9757bdb49850519acd245cd3a/backrefs-6.1-py313-none-any.whl", hash = "sha256:4c9d3dc1e2e558965202c012304f33d4e0e477e1c103663fd2c3cc9bb18b0d05", size = 400726, upload-time = "2025-11-15T14:52:04.093Z" },
     { url = "https://files.pythonhosted.org/packages/1d/72/6296bad135bfafd3254ae3648cd152980a424bd6fed64a101af00cc7ba31/backrefs-6.1-py314-none-any.whl", hash = "sha256:13eafbc9ccd5222e9c1f0bec563e6d2a6d21514962f11e7fc79872fd56cbc853", size = 412584, upload-time = "2025-11-15T14:52:05.233Z" },
     { url = "https://files.pythonhosted.org/packages/02/e3/a4fa1946722c4c7b063cc25043a12d9ce9b4323777f89643be74cef2993c/backrefs-6.1-py39-none-any.whl", hash = "sha256:a9e99b8a4867852cad177a6430e31b0f6e495d65f8c6c134b68c14c3c95bf4b0", size = 381058, upload-time = "2025-11-15T14:52:06.698Z" },
+]
+
+[[package]]
+name = "basemap"
+version = "2.0.0"
+source = { registry = "https://gitlab.developers.cam.ac.uk/api/v4/projects/8115/packages/pypi/simple" }
+dependencies = [
+    { name = "basemap-data" },
+    { name = "matplotlib" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pyproj" },
+    { name = "pyshp" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/50/e1/f097da590e050be87ba0f9073b0e1bd706a5b8bd446347af28e95effc8e5/basemap-2.0.0.tar.gz", hash = "sha256:923a643a26db6e1704fb7ca45a7636fb190dbc123ad8d23401057a8f5b884bd8", size = 150239, upload-time = "2025-06-13T14:38:23.569Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/20/ea/7e9ce423011f9106009111b7a6d39cde85573cb4f51c0f6ad313e6682886/basemap-2.0.0-cp312-cp312-macosx_10_13_x86_64.whl", hash = "sha256:51c2be63c04e4da698b51f0773d4f9a711dd60afe842045dc9a5e8774c9f5bc4", size = 657716, upload-time = "2025-06-13T14:38:01.935Z" },
+    { url = "https://files.pythonhosted.org/packages/c8/34/489aa67ace0887ef4ed96e0ab88101caa96da240ab80b9cb486e33d06b29/basemap-2.0.0-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:ba5b0b7d234b15dd20026f64886da2aafb90be3282410006d8c6c7d8b4cc0798", size = 581826, upload-time = "2025-06-13T14:38:03.227Z" },
+    { url = "https://files.pythonhosted.org/packages/3a/74/71345ca9757aaf63a29606550d5c23b1dc951ea1f72f97975fed3f4225bf/basemap-2.0.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:688e35e2049d8a469f6d7dc0a7ce9af396e06cec299de59ba2e2788bd9a39c70", size = 1096452, upload-time = "2025-06-13T14:38:04.488Z" },
+    { url = "https://files.pythonhosted.org/packages/e9/af/4503d6cce2dd492972b8b437b15819aab8529cb373252840f8f98734c8fc/basemap-2.0.0-cp312-cp312-win_amd64.whl", hash = "sha256:6b07a126fe0faa128379d5dde2f8007ceb94eaea2d80dc42aebfc039ce51299c", size = 439832, upload-time = "2025-06-13T14:38:05.816Z" },
+    { url = "https://files.pythonhosted.org/packages/a4/97/abdf6d85115005cca215b7f394bd4e0a2d218d4d0acb744a95917022e3ad/basemap-2.0.0-cp313-cp313-macosx_10_13_x86_64.whl", hash = "sha256:acd8f709fcd124954de02d83c8310bae0afe386e781111b8aa4665daa85fef7e", size = 657291, upload-time = "2025-06-13T14:38:07.115Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/2c/c8b7be7e9373019a4b8a9bf336673adebbb203eec37450901e63c842b4a4/basemap-2.0.0-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:815ae9961434be01fa462822038c4d5e24546b57d07f6841e1346d74594a58c0", size = 581433, upload-time = "2025-06-13T14:38:08.483Z" },
+    { url = "https://files.pythonhosted.org/packages/22/a5/aca0b554cfe1d6cfae7cddf83c44d60a04d9befb4107156f9e9236e05fac/basemap-2.0.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:9894b9040541cffefc332bddf4bf5e415696479b4cb737204ff4f13e803d53c0", size = 1087326, upload-time = "2025-06-13T14:38:09.501Z" },
+    { url = "https://files.pythonhosted.org/packages/62/89/b8520c45b35ee8a1968a50ede87721d93b3de4ab2401c774e125408bf16a/basemap-2.0.0-cp313-cp313-win_amd64.whl", hash = "sha256:5f27ea078a12f261157b9e9a0d8b9308f777bf878fa8148d69d434c91e550eae", size = 439798, upload-time = "2025-06-13T14:38:10.843Z" },
+]
+
+[[package]]
+name = "basemap-data"
+version = "2.0.0"
+source = { registry = "https://gitlab.developers.cam.ac.uk/api/v4/projects/8115/packages/pypi/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/d6/92/e19148e23ec439eaf15b42b20449a6cf1e3aacd74ba24639d38ce1c62817/basemap_data-2.0.0.tar.gz", hash = "sha256:4cc8e682b26881337dca510df31bdaaf8af6dbceee5c073693283dd90b6c90eb", size = 30517819, upload-time = "2025-06-13T14:38:25.161Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/2a/b99e7e00092e3f2d659e6e7203985cdd2f78c9c68786a41316a1e81bdb05/basemap_data-2.0.0-py3-none-any.whl", hash = "sha256:56103a0dfa411c77bec1888b232bb70e7ceb089f83679531fbb4bb6efafa5035", size = 30534764, upload-time = "2025-06-13T14:38:16.919Z" },
 ]
 
 [[package]]
@@ -3533,11 +3568,11 @@ wheels = [
 
 [[package]]
 name = "pyshp"
-version = "3.0.2.post1"
+version = "2.3.1"
 source = { registry = "https://gitlab.developers.cam.ac.uk/api/v4/projects/8115/packages/pypi/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/7f/fb/07f057ff01229c575831766b44bd249aefa086146cf5bce52e172d77cf4e/pyshp-3.0.2.post1.tar.gz", hash = "sha256:18e34a66759b6d34a6f535978c76dad518200f23a727d9e22af8e8535c0245b9", size = 2192180, upload-time = "2025-10-10T16:04:58.529Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/63/9f/0dd21250c60375a532c35e89fad8d5e8a3f1a2e3f7c389ccc5a60b05263e/pyshp-2.3.1.tar.gz", hash = "sha256:4caec82fd8dd096feba8217858068bacb2a3b5950f43c048c6dc32a3489d5af1", size = 1731544, upload-time = "2022-07-27T19:51:28.409Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/51/92/a8ad817864a560b96ac1c817f9c56bb7eacc1a7d522e2d39afe9e9c77d7b/pyshp-3.0.2.post1-py3-none-any.whl", hash = "sha256:b0aec66bc55f7cd3a846f6b02c5a9eec1fc1d2cff16ccfcf6493a6773c7eb602", size = 58298, upload-time = "2025-10-10T16:04:57.151Z" },
+    { url = "https://files.pythonhosted.org/packages/98/2f/68116db5b36b895c0450e3072b8cb6c2fac0359279b182ea97014d3c8ac0/pyshp-2.3.1-py2.py3-none-any.whl", hash = "sha256:67024c0ccdc352ba5db777c4e968483782dfa78f8e200672a90d2d30fd8b7b49", size = 46537, upload-time = "2022-07-27T19:51:26.34Z" },
 ]
 
 [[package]]
