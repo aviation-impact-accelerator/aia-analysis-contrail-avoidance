@@ -11,7 +11,7 @@ __all__ = (
 import datetime
 
 import numpy as np
-import pandas as pd
+import polars as pl
 
 
 def generate_synthetic_flight(  # noqa: PLR0913
@@ -21,7 +21,7 @@ def generate_synthetic_flight(  # noqa: PLR0913
     departure_time: datetime.datetime,
     length_of_flight: float,
     flight_level: int,
-) -> pd.DataFrame:
+) -> pl.DataFrame:
     """Generates synthetic flight from departure to arrival location as a series of timestamps.
 
     Args:
@@ -41,13 +41,14 @@ def generate_synthetic_flight(  # noqa: PLR0913
     latitudes = np.linspace(departure_location[0], arrival_location[0], number_of_timestamps)
     longitudes = np.linspace(departure_location[1], arrival_location[1], number_of_timestamps)
 
-    timestamps = pd.date_range(
-        departure_time,
-        departure_time + datetime.timedelta(seconds=length_of_flight),
-        periods=number_of_timestamps,
+    timestamps = pl.datetime_range(
+        start=departure_time,
+        end=departure_time + datetime.timedelta(seconds=length_of_flight),
+        intervals=number_of_timestamps - 1,
+        eager=True,
     )
 
-    return pd.DataFrame(
+    return pl.DataFrame(
         {
             "flight_id": np.full(number_of_timestamps, flight_id, dtype=int),
             "departure_location": [departure_location] * number_of_timestamps,
@@ -112,7 +113,7 @@ def most_common_cruise_flight_level() -> int:
     return 300
 
 
-def read_adsb_flight_dataframe() -> pd.DataFrame:
+def read_adsb_flight_dataframe() -> pl.DataFrame:
     """Read the pre-processed ADS-B flight data from a parquet file."""
     parquet_file = "data/2024_01_01_sample_processed.parquet"
-    return pd.read_parquet(parquet_file)
+    return pl.read_parquet(parquet_file)
