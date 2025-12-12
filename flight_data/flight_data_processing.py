@@ -62,11 +62,9 @@ def generate_flight_dataframe_from_adsb_data() -> pl.DataFrame:
             )
             distances.append(float(distance))
 
-    flight_dataframe = flight_dataframe.with_columns(
-        pl.Series("distance_flown_in_segment", distances)
-    ).drop(["prev_lat", "prev_lon"])
-
-    return flight_dataframe
+    return flight_dataframe.with_columns(pl.Series("distance_flown_in_segment", distances)).drop(
+        ["prev_lat", "prev_lon"]
+    )
 
 
 def process_adsb_flight_data(generated_dataframe: pl.DataFrame, save_filename: str) -> None:
