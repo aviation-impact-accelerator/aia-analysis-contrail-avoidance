@@ -136,11 +136,11 @@ def generate_energy_forcing_statistics(
             ),
         },
         "energy_forcing_per_segment": {
-            "mean": float(mean_energy_forcing_per_segment),
-            "median": float(median_energy_forcing_per_segment),
-            "max": float(max_energy_forcing_per_segment),
-            "mean_contrail_forming_only": float(mean_ef_contrail_segments),
-            "median_contrail_forming_only": float(median_ef_contrail_segments),
+            "mean": mean_energy_forcing_per_segment,
+            "median": median_energy_forcing_per_segment,
+            "max": max_energy_forcing_per_segment,
+            "mean_contrail_forming_only": mean_ef_contrail_segments,
+            "median_contrail_forming_only": median_ef_contrail_segments,
         },
         "energy_forcing_per_flight": {
             "histogram": ef_histogram,
