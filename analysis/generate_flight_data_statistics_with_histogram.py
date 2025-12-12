@@ -77,10 +77,16 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
         altitude_empty_percentage = (
             flight_dataframe[altitude_col].null_count() / len(flight_dataframe) * 100
         )
-        min_val = flight_dataframe[altitude_col].min()
-        max_val = flight_dataframe[altitude_col].max()
 
-        bins = [float(x) for x in range(int(min_val), int(max_val) + 10, 10)]
+        min_val = flight_dataframe[altitude_col].cast(pl.Float64).min()
+        max_val = flight_dataframe[altitude_col].cast(pl.Float64).max()
+
+        if min_val is not None and max_val is not None:
+            min_int: int = int(min_val)  # type: ignore[arg-type]
+            max_int: int = int(max_val)  # type: ignore[arg-type]
+            bins = [float(x) for x in range(min_int, max_int + 10, 10)]
+        else:
+            bins = []
         altitude_histogram = _create_histogram(flight_dataframe[altitude_col], bins)
         altitude_histogram["empty_percentage"] = round(altitude_empty_percentage, 2)
 
