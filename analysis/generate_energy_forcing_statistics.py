@@ -19,7 +19,7 @@ def generate_energy_forcing_statistics(
 
     """
     # Load the flight data with energy forcing
-    flight_dataframe = pl.read_parquet(f"data/{parquet_file}.parquet")
+    flight_dataframe = pl.read_parquet(f"data/contrails_model_data/{parquet_file}.parquet")
 
     # --- Basic Energy Forcing Statistics ---
     total_datapoints = len(flight_dataframe)

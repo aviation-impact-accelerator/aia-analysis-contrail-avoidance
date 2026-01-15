@@ -6,13 +6,13 @@ import datetime
 
 import pytest
 
-from aia_model_contrail_avoidance.environment import (
+from aia_model_contrail_avoidance.core_model.environment import (
     calculate_total_energy_forcing,
     create_grid_environment,
     create_synthetic_grid_environment,
     run_flight_data_through_environment,
 )
-from aia_model_contrail_avoidance.flights import (
+from aia_model_contrail_avoidance.core_model.flights import (
     generate_synthetic_flight,
     most_common_cruise_flight_level,
 )

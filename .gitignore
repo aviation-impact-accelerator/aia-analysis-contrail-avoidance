@@ -170,6 +170,6 @@ terraform/.terraform/
 .DS_Store
 
 # Project-specific data and results
-data/
+data/contrails_model_data
 results/
-flight_data/*.parquet
+data/flight_data/*.parquet

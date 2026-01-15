@@ -36,7 +36,7 @@ def calculate_total_energy_forcing(
 def create_grid_environment() -> xr.DataArray:
     """Creates grid environment from COSIP grid data."""
     environment_dataset = xr.open_dataset(
-        "./cosip_grid/cocipgrid_sample_result.nc",
+        "data/energy_forcing_data/cocipgrid_sample_result.nc",
         decode_timedelta=True,
         drop_variables=("air_pressure", "altitude", "contrail_age"),
     )
@@ -48,7 +48,7 @@ def create_grid_environment() -> xr.DataArray:
 def create_grid_environment_uk_adsb_jan() -> xr.DataArray:
     """Creates grid environment from COSIP grid data."""
     environment_dataset = xr.open_dataset(
-        "./cosip_grid/cocipgrid_uk_adsb_jan_result.nc",
+        "data/energy_forcing_data/cocipgrid_uk_adsb_jan_result.nc",
         decode_timedelta=True,
         drop_variables=("air_pressure", "altitude", "contrail_age"),
     )

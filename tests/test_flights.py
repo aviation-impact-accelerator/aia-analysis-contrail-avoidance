@@ -6,7 +6,7 @@ import datetime
 
 import pytest
 
-from aia_model_contrail_avoidance.flights import (
+from aia_model_contrail_avoidance.core_model.flights import (
     flight_distance_from_location,
     generate_synthetic_flight,
     most_common_cruise_flight_level,

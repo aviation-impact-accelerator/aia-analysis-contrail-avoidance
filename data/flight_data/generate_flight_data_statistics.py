@@ -6,7 +6,7 @@ import json
 
 import polars as pl
 
-from aia_model_contrail_avoidance.airports import list_of_uk_airports
+from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
 
 jsonfilename = "2024_01_01_sample_stats"
 parquet_file = "flight_data/2024_01_01_sample.parquet"

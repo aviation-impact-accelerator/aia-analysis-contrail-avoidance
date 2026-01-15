@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from aia_model_contrail_avoidance.airports import (
+from aia_model_contrail_avoidance.core_model.airports import (
     airport_icao_code_to_location,
     airport_name_from_icao_code,
     list_of_uk_airports,
