@@ -26,7 +26,7 @@ def generate_flight_dataframe_from_adsb_data() -> pl.DataFrame:
         "longitude",
         "altitude_baro",
         "flight_id",
-        "aircraft_type_icao",
+        "icao_address",
         "departure_airport_icao",
         "arrival_airport_icao",
     ]
@@ -93,8 +93,40 @@ def process_adsb_flight_data(generated_dataframe: pl.DataFrame, save_filename: s
     dataframe_processed.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
 
 
+def generate_flight_info_database(processed_parquet_filename: str, save_filename: str) -> None:
+    """Generates a flight information database from processed ADS-B data."""
+    processed_parquet_file = "data/contrails_model_data/" + processed_parquet_filename + ".parquet"
+    flight_dataframe = pl.read_parquet(processed_parquet_file)
+
+    # Extract unique flight information
+    flight_info_df = flight_dataframe.select(
+        [
+            "flight_id",
+            "icao_address",
+            "departure_airport_icao",
+            "arrival_airport_icao",
+        ]
+    ).unique()
+
+    # add new colums for first message timestamp and last message timestamp
+    first_timestamps = flight_dataframe.group_by("flight_id").agg(
+        pl.col("timestamp").min().alias("first_message_timestamp")
+    )
+    last_timestamps = flight_dataframe.group_by("flight_id").agg(
+        pl.col("timestamp").max().alias("last_message_timestamp")
+    )
+    flight_info_df = flight_info_df.join(first_timestamps, on="flight_id").join(
+        last_timestamps, on="flight_id"
+    )
+
+    # Save flight information database to parquet
+    flight_info_df.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
+
+
 if __name__ == "__main__":
     dataframe = generate_flight_dataframe_from_adsb_data()
     save_filename = "2024_01_01_sample_processed"
 
     process_adsb_flight_data(dataframe, save_filename)
+
+    generate_flight_info_database(save_filename, "flight_info_database")
