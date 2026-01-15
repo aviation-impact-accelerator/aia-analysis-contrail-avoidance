@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import polars as pl
 
-from aia_model_contrail_avoidance.environment import (
+from aia_model_contrail_avoidance.core_model.environment import (
     calculate_total_energy_forcing,
     create_grid_environment_uk_adsb_jan,
     run_flight_data_through_environment,
 )
-from aia_model_contrail_avoidance.flights import read_adsb_flight_dataframe
+from aia_model_contrail_avoidance.core_model.flights import read_adsb_flight_dataframe
 
 
 def calculate_energy_forcing_for_flights(parquet_file_with_ef: str, output_file_name: str) -> None:
@@ -77,10 +77,12 @@ def calculate_energy_forcing_for_flights(parquet_file_with_ef: str, output_file_
     )
 
     # Save the full dataset with energy forcing
-    flight_data_with_ef.write_parquet("data/" + parquet_file_with_ef + ".parquet")
+    flight_data_with_ef.write_parquet(
+        "data/contrails_model_data/" + parquet_file_with_ef + ".parquet"
+    )
 
     # Save the summary dataframe
-    ef_summary.write_parquet("data/" + output_file_name + ".parquet")
+    ef_summary.write_parquet("data/contrails_model_data/" + output_file_name + ".parquet")
 
 
 if __name__ == "__main__":

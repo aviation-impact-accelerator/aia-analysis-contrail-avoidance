@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import polars as pl
 
-from aia_model_contrail_avoidance.flights import flight_distance_from_location
+from aia_model_contrail_avoidance.core_model.flights import flight_distance_from_location
 
 
 def generate_flight_dataframe_from_adsb_data() -> pl.DataFrame:
@@ -90,7 +90,7 @@ def process_adsb_flight_data(generated_dataframe: pl.DataFrame, save_filename: s
         f"INFO: Removed {percentage_removed:.2f}% of datapoints due to low flight level or zero distance flown"
     )
     # Save processed dataframe to parquet
-    dataframe_processed.write_parquet("data/" + save_filename + ".parquet")
+    dataframe_processed.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
 
 
 if __name__ == "__main__":

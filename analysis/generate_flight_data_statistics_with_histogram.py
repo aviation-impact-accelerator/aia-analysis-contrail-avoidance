@@ -8,7 +8,7 @@ from pathlib import Path
 import numpy as np
 import polars as pl
 
-from aia_model_contrail_avoidance.airports import list_of_uk_airports
+from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
 
 DISTANCE_BINS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 20, 100, 2000, 3000]
 ALTITUDE_BIN_SIZE = 10  # in flight levels (1000 ft)
@@ -28,9 +28,9 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
         jsonfilename: Output JSON filename (without extension).
     """
     # Load data
-    parquet_file_path = Path("data/" + parquet_file_name + ".parquet")
+    parquet_file_path = Path("data/contrails_model_data/" + parquet_file_name + ".parquet")
     if not parquet_file_path.exists():
-        msg = f"Parquet file not found: data/{parquet_file_name}.parquet"
+        msg = f"Parquet file not found: data/contrails_model_data/{parquet_file_name}.parquet"
         raise FileNotFoundError(msg)
 
     flight_dataframe = pl.read_parquet(parquet_file_path)
