@@ -12,13 +12,11 @@ if TYPE_CHECKING:
     from cartopy.mpl.geoaxes import GeoAxes  # type: ignore # noqa: PGH003
 
 
-# Create a figure with a map projection
-def plot_airspace(environmental_bounds: dict[str, float], filename: str) -> None:
-    """Plot airspace on a map with specified constraints.
+def generate_uk_airspace_geoaxes(environmental_bounds: dict[str, float]) -> GeoAxes:
+    """Generate a GeoAxes object focused on UK airspace.
 
-    Args:
-        environmental_bounds: Dict with lat_min, lat_max, lon_min, lon_max
-        filename: Output filename for the saved figure
+    Returns:
+        GeoAxes object with UK airspace extent set.
     """
     geoax: GeoAxes
     fig, geoax = plt.subplots(figsize=(12, 10), subplot_kw={"projection": ccrs.PlateCarree()})
@@ -47,6 +45,18 @@ def plot_airspace(environmental_bounds: dict[str, float], filename: str) -> None
     gl.top_labels = False
     gl.right_labels = False
 
+    return geoax
+
+
+# Create a figure with a map projection
+def plot_airspace(environmental_bounds: dict[str, float], filename: str) -> None:
+    """Plot airspace on a map with specified constraints.
+
+    Args:
+        environmental_bounds: Dict with lat_min, lat_max, lon_min, lon_max
+        filename: Output filename for the saved figure
+    """
+    geoax = generate_uk_airspace_geoaxes(environmental_bounds)
     geoax.set_title(
         "UK Airspace - Latitude: 49-62°N, Longitude: -8 to 3°E",
         fontsize=12,
