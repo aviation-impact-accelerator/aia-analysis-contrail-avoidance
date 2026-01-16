@@ -1,4 +1,4 @@
-"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""
+"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""  # noqa: INP001
 
 from __future__ import annotations
 
