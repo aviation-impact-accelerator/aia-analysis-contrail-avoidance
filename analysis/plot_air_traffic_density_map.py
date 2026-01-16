@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import cartopy.crs as ccrs
+import cartopy.crs as ccrs  # type: ignore[import-untyped]
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
@@ -58,10 +58,10 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
 
         # Set environmental bounds
         if environmental_bounds is None:
-            min_lat = int(flight_dataframe_with_bins["lat_bin"].min())
-            max_lat = int(flight_dataframe_with_bins["lat_bin"].max())
-            min_lon = int(flight_dataframe_with_bins["lon_bin"].min())
-            max_lon = int(flight_dataframe_with_bins["lon_bin"].max())
+            min_lat = int(flight_dataframe_with_bins["lat_bin"].min())  # type: ignore[arg-type]
+            max_lat = int(flight_dataframe_with_bins["lat_bin"].max())  # type: ignore[arg-type]
+            min_lon = int(flight_dataframe_with_bins["lon_bin"].min())  # type: ignore[arg-type]
+            max_lon = int(flight_dataframe_with_bins["lon_bin"].max())  # type: ignore[arg-type]
             environmental_bounds = {
                 "lat_min": min_lat,
                 "lat_max": max_lat,
