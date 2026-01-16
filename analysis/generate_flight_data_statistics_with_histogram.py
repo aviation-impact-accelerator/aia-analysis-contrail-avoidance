@@ -9,9 +9,15 @@ import numpy as np
 import polars as pl
 
 from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
+from aia_model_contrail_avoidance.core_model.dimensions import (
+    TemporalGranularity,
+    _get_temporal_grouping_field,
+    _get_temporal_range_and_labels,
+)
 
 DISTANCE_BINS = [0, 0.5, 1, 1.5, 2, 2.5, 3, 4, 5, 6, 7, 8, 9, 10, 20, 100, 2000, 3000]
 ALTITUDE_BIN_SIZE = 10  # in flight levels (1000 ft)
+TEMPORAL_GRANULARITY = TemporalGranularity.HOURLY  # Granularity for temporal aggregation
 
 
 def _create_histogram(data: pl.Series, bins: list[float]) -> dict[str, list[float] | float]:
@@ -20,12 +26,17 @@ def _create_histogram(data: pl.Series, bins: list[float]) -> dict[str, list[floa
     return {"bin_edges": bin_edges.tolist(), "counts": hist.tolist()}
 
 
-def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> None:  # noqa: PLR0915
+def generate_flight_statistics(  # noqa: PLR0915
+    parquet_file_name: str,
+    jsonfilename: str,
+    temporal_granularity: TemporalGranularity = TemporalGranularity.HOURLY,
+) -> None:
     """Generate flight data statistics and save to JSON file.
 
     Args:
         parquet_file_name: Path to the parquet file containing flight data.
         jsonfilename: Output JSON filename (without extension).
+        temporal_granularity: Temporal granularity for aggregation (default: HOURLY).
     """
     # Load data
     parquet_file_path = Path("data/contrails_model_data/" + parquet_file_name + ".parquet")
@@ -110,44 +121,57 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
             "distance_flown": distance_by_altitude_bin,
         }
 
-    # --- Number of Aircraft per hour ---
-    planes_per_hour_histogram = None
+    # --- Number of Aircraft per temporal unit ---
+    planes_per_temporal_histogram = None
     if "timestamp" in flight_dataframe.columns:
-        # Extract hour from timestamp
-        flight_dataframe_with_hour = flight_dataframe.with_columns(
-            pl.col("timestamp").dt.hour().alias("hour")
+        temporal_field = _get_temporal_grouping_field(temporal_granularity)
+        temporal_range, _ = _get_temporal_range_and_labels(temporal_granularity)
+
+        # Extract temporal unit from timestamp
+        flight_dataframe_with_temporal = flight_dataframe.with_columns(
+            pl.col("timestamp").dt.__getattribute__(temporal_field)().alias("temporal_unit")
         )
-        planes_per_hour = (
-            flight_dataframe_with_hour.group_by("hour")
+        planes_per_temporal = (
+            flight_dataframe_with_temporal.group_by("temporal_unit")
             .agg(pl.col("flight_id").n_unique())
             .to_dict(as_series=False)
         )
-        hour_to_planes = dict(
-            zip(planes_per_hour["hour"], planes_per_hour["flight_id"], strict=True)
+        temporal_to_planes = dict(
+            zip(planes_per_temporal["temporal_unit"], planes_per_temporal["flight_id"], strict=True)
         )
-        planes_per_hour_histogram = {str(hour): hour_to_planes.get(hour, 0) for hour in range(24)}
+        planes_per_temporal_histogram = {
+            str(unit): temporal_to_planes.get(unit, 0) for unit in temporal_range
+        }
 
-    distance_flown_per_hour_histogram = None
+    distance_flown_per_temporal_histogram = None
     if "timestamp" in flight_dataframe.columns and distance_col in flight_dataframe.columns:
-        # Extract hour from timestamp
-        flight_dataframe_with_hour = flight_dataframe.with_columns(
-            pl.col("timestamp").dt.hour().alias("hour")
+        temporal_field = _get_temporal_grouping_field(temporal_granularity)
+        temporal_range, _ = _get_temporal_range_and_labels(temporal_granularity)
+
+        # Extract temporal unit from timestamp
+        flight_dataframe_with_temporal = flight_dataframe.with_columns(
+            pl.col("timestamp").dt.__getattribute__(temporal_field)().alias("temporal_unit")
         )
-        distance_per_hour = (
-            flight_dataframe_with_hour.group_by("hour")
+        distance_per_temporal = (
+            flight_dataframe_with_temporal.group_by("temporal_unit")
             .agg(pl.col(distance_col).sum())
             .to_dict(as_series=False)
         )
-        hour_to_distance = dict(
-            zip(distance_per_hour["hour"], distance_per_hour[distance_col], strict=True)
+        temporal_to_distance = dict(
+            zip(
+                distance_per_temporal["temporal_unit"],
+                distance_per_temporal[distance_col],
+                strict=True,
+            )
         )
-        distance_flown_per_hour_histogram = {
-            str(hour): hour_to_distance.get(hour, 0) for hour in range(24)
+        distance_flown_per_temporal_histogram = {
+            str(unit): temporal_to_distance.get(unit, 0) for unit in temporal_range
         }
 
     # --- Build summary ---
     stats = {
         "file_name": parquet_file_name,
+        "temporal_granularity": temporal_granularity.value,
         "number_of_datapoints": number_of_datapoints,
         "timeframe": {"first": str(timeframe_first), "last": str(timeframe_last)},
         "flight_data": {
@@ -162,8 +186,8 @@ def generate_flight_statistics(parquet_file_name: str, jsonfilename: str) -> Non
         "distance_flown_in_segment_histogram": histogram,
         "altitude_baro_histogram": altitude_histogram,
         "distance_flown_by_altitude_histogram": distance_by_altitude_histogram,
-        "planes_per_hour_histogram": planes_per_hour_histogram,
-        "distance_flown_per_hour_histogram": distance_flown_per_hour_histogram,
+        "air_traffic_density_per_temporal_histogram": planes_per_temporal_histogram,
+        "distance_flown_per_temporal_histogram": distance_flown_per_temporal_histogram,
     }
 
     # --- Write output ---
