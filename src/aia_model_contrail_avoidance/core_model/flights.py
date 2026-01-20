@@ -13,6 +13,18 @@ import datetime
 import numpy as np
 import polars as pl
 
+FLIGHT_DATAFRAME_SCHEMA = {
+    "flight_id": pl.Int64,
+    "departure_location": pl.List(pl.Float64),
+    "arrival_location": pl.List(pl.Float64),
+    "departure_time": pl.Datetime,
+    "timestamp": pl.Datetime,
+    "latitude": pl.Float64,
+    "longitude": pl.Float64,
+    "flight_level": pl.Int64,
+    "distance_flown_in_segment": pl.Float64,
+}
+
 
 def generate_synthetic_flight(  # noqa: PLR0913
     flight_id: int,
@@ -43,19 +55,22 @@ def generate_synthetic_flight(  # noqa: PLR0913
         for i in range(number_of_timestamps)
     ]
 
-    return pl.DataFrame(
+    df = pl.DataFrame(
         {
             "flight_id": np.full(number_of_timestamps, flight_id, dtype=int),
-            "departure_location": [departure_location] * number_of_timestamps,
-            "arrival_location": [arrival_location] * number_of_timestamps,
+            "departure_location": [list(departure_location)] * number_of_timestamps,
+            "arrival_location": [list(arrival_location)] * number_of_timestamps,
             "departure_time": [departure_time] * number_of_timestamps,
             "timestamp": timestamps,
             "latitude": latitudes,
             "longitude": longitudes,
             "flight_level": np.full(number_of_timestamps, flight_level, dtype=int),
             "distance_flown_in_segment": np.full(number_of_timestamps, 1.0, dtype=float),
-        }
+        },
+        schema=FLIGHT_DATAFRAME_SCHEMA,
     )
+
+    return df
 
 
 def flight_distance_from_location(
