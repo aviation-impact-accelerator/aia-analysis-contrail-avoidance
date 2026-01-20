@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 
+import polars as pl
 import pytest
 
 from aia_model_contrail_avoidance.core_model.flights import (
@@ -41,6 +42,9 @@ def test_generate_synthetic_flight() -> None:
         length_of_flight=length_of_flight,
         flight_level=most_common_cruise_flight_level(),
     )
+    # Check that 'departure_time' and 'timestamp' columns are of correct type (pl.Datetime)
+    assert sample_flight_dataframe.schema["departure_time"] == pl.Datetime
+    assert sample_flight_dataframe.schema["timestamp"] == pl.Datetime
     assert sample_flight_dataframe["flight_id"][0] == 1
     assert len(sample_flight_dataframe["timestamp"]) == pytest.approx(
         expected_distance_in_nautical_miles, rel=0.05
