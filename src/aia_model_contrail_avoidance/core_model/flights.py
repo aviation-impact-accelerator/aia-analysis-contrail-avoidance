@@ -9,26 +9,11 @@ __all__ = (
 )
 
 import datetime
-from typing import TYPE_CHECKING, Any
 
 import numpy as np
 import polars as pl
 
-if TYPE_CHECKING:
-    from collections.abc import Mapping
-
-
-FLIGHT_DATAFRAME_SCHEMA: Mapping[str, Any] = {
-    "flight_id": pl.Int64,
-    "departure_location": pl.List(pl.Float64),
-    "arrival_location": pl.List(pl.Float64),
-    "departure_time": pl.Datetime,
-    "timestamp": pl.Datetime,
-    "latitude": pl.Float64,
-    "longitude": pl.Float64,
-    "flight_level": pl.Int64,
-    "distance_flown_in_segment": pl.Float64,
-}
+from aia_model_contrail_avoidance.config import FLIGHT_TIMESTAMPS_SCHEMA
 
 
 def generate_synthetic_flight(  # noqa: PLR0913
@@ -72,7 +57,7 @@ def generate_synthetic_flight(  # noqa: PLR0913
             "flight_level": np.full(number_of_timestamps, flight_level, dtype=int),
             "distance_flown_in_segment": np.full(number_of_timestamps, 1.0, dtype=float),
         },
-        schema=FLIGHT_DATAFRAME_SCHEMA,
+        schema=FLIGHT_TIMESTAMPS_SCHEMA,
     )
 
 

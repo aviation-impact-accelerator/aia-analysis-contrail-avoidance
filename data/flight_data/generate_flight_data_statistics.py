@@ -42,13 +42,7 @@ unique_departure_arrival_pairs = (
 regional_departure_arrival_pairs = (
     regional_flights_df.select(["departure_airport_icao", "arrival_airport_icao"]).unique().height
 )
-# --- Complete flights ---
 
-complete_flights_df = flight_dataframe.filter(
-    (pl.col("takeoff_time") > timeframe_first) & (pl.col("landing_time") < timeframe_last)
-)
-
-number_of_complete_flights = complete_flights_df["flight_id"].n_unique()
 # --- Build summary ---
 stats = {
     "file_name": parquet_file,
