@@ -140,12 +140,89 @@ def clean_adsb_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame:
             )
             distances.append(float(distance))
 
-    return flight_dataframe.with_columns(pl.Series("distance_flown_in_segment", distances)).drop(
-        ["prev_lat", "prev_lon"]
+    flight_dataframe = flight_dataframe.with_columns(
+        pl.Series("distance_flown_in_segment", distances)
+    ).drop(["prev_lat", "prev_lon"])
+    # remove columns where distance_flown_in_segment is null
+    flight_dataframe = flight_dataframe.filter(pl.col("distance_flown_in_segment").is_not_null())
+
+    # fill altitude nulls with previous value for that flight
+    flight_dataframe = flight_dataframe.with_columns(
+        pl.col("flight_level").fill_null(strategy="forward").over("flight_id")
     )
+    # reorganise columns
+    flight_dataframe = flight_dataframe.select(
+        [
+            "timestamp",
+            "latitude",
+            "longitude",
+            "flight_level",
+            "flight_id",
+            "icao_address",
+            "departure_airport_icao",
+            "arrival_airport_icao",
+            "distance_flown_in_segment",
+        ]
+    )
+    # for large distance_flown_in_segment, create new rows with interpolated values
+    max_distance = 50.0  # nautical miles
+    flight_dataframe = generate_interpolated_rows_of_large_distance_flights(
+        flight_dataframe, max_distance=max_distance
+    )
+    print(f"INFO: After cleaning, the flight dataframe has {len(flight_dataframe)} rows.")
+    return flight_dataframe
 
 
-def process_adsb_flight_data(generated_dataframe: pl.DataFrame, save_filename: str) -> None:
+def generate_interpolated_rows_of_large_distance_flights(
+    flight_dataframe: pl.DataFrame, max_distance: float = 10.0
+) -> pl.DataFrame:
+    """Generates interpolated rows for flights with large distance flown in segment.
+
+    Args:
+        flight_dataframe: DataFrame containing ADS-B flight data.
+        max_distance: Maximum distance in nautical miles before interpolation is needed.
+
+    Returns:
+        DataFrame with interpolated rows added.
+    """
+    previous_row = None
+    for row in flight_dataframe.iter_rows(named=True):
+        if row["distance_flown_in_segment"] > max_distance and previous_row is not None:
+            # calculate intervals for each row
+            num_new_rows = math.ceil(row["distance_flown_in_segment"] / max_distance)
+            time_step = (row["timestamp"] - previous_row["timestamp"]).total_seconds() / (
+                num_new_rows + 1
+            )
+            distance_flown_in_segment_step = row["distance_flown_in_segment"] / (num_new_rows + 1)
+            # create new rows
+            latitudes = np.linspace((previous_row["latitude"]), (row["latitude"]), num_new_rows)
+            longitudes = np.linspace((previous_row["longitude"]), (row["longitude"]), num_new_rows)
+            timestamps = [
+                previous_row["timestamp"] + datetime.timedelta(seconds=i * time_step)
+                for i in range(num_new_rows)
+            ]
+            rows_to_add = pl.DataFrame(
+                {
+                    "timestamp": timestamps,
+                    "latitude": latitudes,
+                    "longitude": longitudes,
+                    "flight_level": [previous_row["flight_level"]] * num_new_rows,
+                    "flight_id": [row["flight_id"]] * num_new_rows,
+                    "icao_address": [row["icao_address"]] * num_new_rows,
+                    "departure_airport_icao": [row["departure_airport_icao"]] * num_new_rows,
+                    "arrival_airport_icao": [row["arrival_airport_icao"]] * num_new_rows,
+                    "distance_flown_in_segment": [distance_flown_in_segment_step] * num_new_rows,
+                },
+                schema=ADS_B_SCHEMA_CLEANED,
+            )
+            flight_dataframe = pl.concat([flight_dataframe, rows_to_add], how="vertical")
+        previous_row = row
+    return flight_dataframe
+
+
+def process_adsb_flight_data_for_environment(
+    generated_dataframe: pl.DataFrame, save_filename: str
+) -> None:
     """Process ADS-B flight data and save cleaned DataFrame to parquet.
 
     Removes datapoints with low flight levels (near or on ground) or zero distance flown between time intervals.
