@@ -225,25 +225,21 @@ def process_adsb_flight_data_for_environment(
 ) -> None:
     """Process ADS-B flight data and save cleaned DataFrame to parquet.
 
-    Removes datapoints with low flight levels (near or on ground) or zero distance flown between time intervals.
+    Removes datapoints with low flight levels (near or on ground)
 
     Args:
         generated_dataframe: DataFrame containing raw ADS-B flight data.
         save_filename: Filename (without extension) to save the processed DataFrame.
     """
     # Remove datapoints where flight level is none or negative
+    low_flight_level = 20.0  # flight level 20 = 2000 feet
     dataframe_processed = generated_dataframe.filter(
-        pl.col("flight_level").is_not_null() & (pl.col("flight_level") >= 0)
+        pl.col("flight_level").is_not_null() & (pl.col("flight_level") >= low_flight_level)
     )
-
-    # Remove datapoints where distance flown in segment is zero
-    dataframe_processed = dataframe_processed.filter(pl.col("distance_flown_in_segment") > 0)
 
     # percentage of datapoints removed
     percentage_removed = 100 * (1 - len(dataframe_processed) / len(generated_dataframe))
-    print(
-        f"INFO: Removed {percentage_removed:.2f}% of datapoints due to low flight level or zero distance flown"
-    )
+    print(f"INFO: Removed {percentage_removed:.2f}% of datapoints due to low flight level")
     # Save processed dataframe to parquet
     dataframe_processed.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
 
