@@ -58,12 +58,12 @@ def generate_cosip_grid_environment(
         "longitude": np.arange(lon_bounds[0], lon_bounds[1], 1.0),
         "latitude": np.arange(lat_bounds[0], lat_bounds[1], 1.0),
     }
-    grid_source = MetDataset.from_coords(**coords)
+    grid_source = MetDataset.from_coords(**coords)  # type: ignore[arg-type]
 
     # Run CocipGrid model
     result = cocip_grid.eval(source=grid_source)
     # save dataset to netcdf
-    result.data.to_netcdf("data/energy_forcing_data" + save_filename + ".nc")
+    result.data.to_netcdf("data/energy_forcing_data/" + save_filename + ".nc")
 
 
 def plot_cosip_grid_environment(
@@ -80,12 +80,12 @@ def plot_cosip_grid_environment(
         environment_filename: Filename of the saved CocipGrid environment dataset.
         save_filename: Filename to save the plot.
     """
-    grid: MetDataset = CocipGrid.load("data/energy_forcing_data/" + environment_filename + ".nc")
+    grid: MetDataset = MetDataset.load("data/energy_forcing_data/" + environment_filename + ".nc")
     plt.figure(figsize=(12, 8))
     ef_per_m = grid.data["ef_per_m"].isel(
         time=selected_time_index, level=selected_flight_level_index
     )
-    ef_per_m.plot(x="longitude", y="latitude", vmin=-1e8, vmax=1e8, cmap="coolwarm")
+    ef_per_m.plot(x="longitude", y="latitude", vmin=-1e8, vmax=1e8, cmap="coolwarm")  # type: ignore[call-arg]
 
     plt.title("CocipGrid Energy Forcing")
     plt.xlabel("Longitude")
