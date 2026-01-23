@@ -14,6 +14,9 @@ import numpy as np
 import polars as pl
 import xarray as xr
 
+# Conversion factor from nautical miles to meters
+NAUTICAL_MILES_TO_METERS = 1852.0
+
 
 def calculate_total_energy_forcing(
     flight_id: int | list[int], flight_dataset_with_energy_forcing: pl.DataFrame
@@ -33,10 +36,10 @@ def calculate_total_energy_forcing(
     return total_energy_forcing_list
 
 
-def create_grid_environment() -> xr.DataArray:
+def create_grid_environment(environment_file_name: str) -> xr.DataArray:
     """Creates grid environment from COSIP grid data."""
     environment_dataset = xr.open_dataset(
-        "data/energy_forcing_data/cocipgrid_sample_result.nc",
+        "data/energy_forcing_data/" + environment_file_name + ".nc",
         decode_timedelta=True,
         drop_variables=("air_pressure", "altitude", "contrail_age"),
     )
@@ -47,14 +50,7 @@ def create_grid_environment() -> xr.DataArray:
 
 def create_grid_environment_uk_ads_b_jan() -> xr.DataArray:
     """Creates grid environment from COSIP grid data."""
-    environment_dataset = xr.open_dataset(
-        "data/energy_forcing_data/cocipgrid_uk_ads_b_jan_result.nc",
-        decode_timedelta=True,
-        drop_variables=("air_pressure", "altitude", "contrail_age"),
-    )
-    return xr.DataArray(
-        environment_dataset["ef_per_m"], dims=("longitude", "latitude", "level", "time")
-    )
+    return create_grid_environment("cosip_grid_uk_airspace_jan01_2024")
 
 
 def create_synthetic_grid_environment() -> xr.DataArray:
@@ -112,7 +108,6 @@ def run_flight_data_through_environment(
 
     """
     flight_dataset = flight_dataset.clone()
-    nautical_miles_to_meters = 1852
 
     longitude_vector = xr.DataArray(flight_dataset["longitude"].to_numpy(), dims=["points"])
     latitude_vector = xr.DataArray(flight_dataset["latitude"].to_numpy(), dims=["points"])
@@ -124,7 +119,7 @@ def run_flight_data_through_environment(
 
     distance_flown_in_segment_vector = (
         xr.DataArray(flight_dataset["distance_flown_in_segment"].to_numpy(), dims=["points"])
-        * nautical_miles_to_meters
+        * NAUTICAL_MILES_TO_METERS
     )
 
     nearest_environment = environment.sel(
