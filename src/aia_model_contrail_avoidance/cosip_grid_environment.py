@@ -1,4 +1,4 @@
-"""Create and visualize a CocipGrid environment for contrail modeling."""  # noqa: INP001
+"""Create and visualize a CocipGrid environment for contrail modeling."""
 
 from __future__ import annotations
 
