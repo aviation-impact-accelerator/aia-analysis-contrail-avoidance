@@ -14,7 +14,7 @@ from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
 from aia_model_contrail_avoidance.core_model.flights import flight_distance_from_location
 
 # Global constants and enums for flight data processing
-MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 50.0  # nautical miles
+MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 3.0  # nautical miles
 LOW_FLIGHT_LEVEL_THRESHOLD = 20.0  # flight level 20 = 2000 feet
 
 
@@ -246,9 +246,14 @@ def generate_interpolated_rows_of_large_distance_flights(
                 },
                 schema=ADS_B_SCHEMA_CLEANED,
             )
+
+            # add new rows to dataframe
             flight_dataframe = pl.concat([flight_dataframe, rows_to_add], how="vertical")
         previous_row = row
-    return flight_dataframe
+    # remove datapoints where distance_flown_in_segment exceeds max_distance
+    flight_dataframe = flight_dataframe.filter(pl.col("distance_flown_in_segment") <= max_distance)
+    # sort by flight_id and timestamp
+    return flight_dataframe.sort(["flight_id", "timestamp"])
 
 
 def process_ads_b_flight_data_for_environment(
