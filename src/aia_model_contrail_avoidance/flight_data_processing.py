@@ -175,8 +175,8 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
     flight_dataframe = flight_dataframe.with_columns(
         pl.Series("distance_flown_in_segment", distances)
     ).drop(["prev_lat", "prev_lon"])
-    # remove columns where distance_flown_in_segment is null
-    flight_dataframe = flight_dataframe.filter(pl.col("distance_flown_in_segment").is_not_null())
+    # remove columns where distance_flown_in_segment is zero
+    flight_dataframe = flight_dataframe.filter(pl.col("distance_flown_in_segment") > 0)
 
     # fill altitude nulls with previous value for that flight
     flight_dataframe = flight_dataframe.with_columns(
