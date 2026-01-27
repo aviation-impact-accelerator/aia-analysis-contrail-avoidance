@@ -18,21 +18,19 @@ def get_gb_airspaces() -> list:  # type: ignore[type-arg]
 
 
 def find_airspace_of_flight_segment(
-    flight_dataframe_path: str,
+    flight_dataframe: pl.DataFrame,
     airspaces: list,  # type: ignore[type-arg]
 ) -> pl.DataFrame:
     """Check if a given flight segment is within any of the provided airspaces.
 
     Args:
-        flight_dataframe_path: Path to a Polars DataFrame containing flight data.
+        flight_dataframe: Flight dataframe
         airspaces: List of airspace objects with 'shape' attribute.
 
     Returns:
         Polars DataFrame with an additional column 'airspace' indicating the name of the airspace
         if the point is within any airspace, otherwise None.
     """
-    flight_dataframe = pl.read_parquet(flight_dataframe_path)
-
     points = shapely.points(flight_dataframe["longitude"], flight_dataframe["latitude"])
 
     # add new column indicating the name of the airspace if the point is within any airspace
