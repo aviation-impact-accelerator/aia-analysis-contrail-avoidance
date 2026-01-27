@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import matplotlib.pyplot as plt
+import polars as pl
 from plot_uk_airspace import generate_uk_airspace_geoaxes
 
 from aia_model_contrail_avoidance.core_model.airspace import (
@@ -48,7 +49,8 @@ if __name__ == "__main__":
     flight_data_path = (
         "data/contrails_model_data/2024_01_01_sample_processed_with_interpolation.parquet"
     )
-    flight_data_with_airspace = find_airspace_of_flight_segment(flight_data_path, gb_airspaces)
+    flight_dataframe = pl.read_parquet(flight_data_path)
+    flight_data_with_airspace = find_airspace_of_flight_segment(flight_dataframe, gb_airspaces)
     # count distance of points within airspaces
     airspace_counts = flight_data_with_airspace.group_by("airspace").len()
     print(airspace_counts)
