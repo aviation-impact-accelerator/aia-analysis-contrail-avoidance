@@ -10,7 +10,7 @@ __all__ = [
 ]
 from enum import Enum
 
-import inquirer
+import inquirer  # type: ignore[import-untyped]
 
 
 class SpatialGranularity(Enum):

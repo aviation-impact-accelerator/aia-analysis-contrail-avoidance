@@ -5,8 +5,8 @@ from __future__ import annotations
 import json
 from typing import TYPE_CHECKING
 
-import plotly.express as px
 import numpy as np
+import plotly.express as px  # type: ignore[import-untyped]
 
 if TYPE_CHECKING:
     from pathlib import Path
