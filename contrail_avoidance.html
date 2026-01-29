@@ -964,5 +964,19 @@
         frameborder="0"
       ></iframe>
     </div>
+
+    <script>
+      function switchTab(tabId) {
+        // Remove active class from all buttons
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        // Add active class to clicked button
+        event.target.classList.add("active");
+
+        // You can add logic here to switch content based on tabId
+        console.log("Switched to tab:", tabId);
+      }
+    </script>
   </body>
 </html>
