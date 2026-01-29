@@ -12,7 +12,6 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     TemporalGranularity,
     _get_temporal_grouping_field,
     _get_temporal_range_and_labels,
-    user_input_temporal_granularity,
 )
 
 
