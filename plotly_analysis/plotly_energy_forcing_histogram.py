@@ -74,7 +74,7 @@ def plot_energy_forcing_histogram(
     )
 
     fig1.update_layout(
-        bargap=0.05,
+        bargap=0.1,
         modebar_remove=[
             "zoom",
             "pan",
@@ -125,6 +125,9 @@ def plot_energy_forcing_histogram(
         },
         title="Cumulative Energy Forcing Contribution",
     )
+    fig2.update_traces(marker_line_color="black", marker_line_width=1)
+    fig2.update_xaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
+    fig2.update_yaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
 
     fig2.add_hline(
         80,
@@ -160,8 +163,6 @@ def plot_energy_forcing_histogram(
     fig2.add_vline(flights_for_80_percent, line_dash="dot", line_color="green", opacity=0.7)
     fig2.add_vline(flights_for_50_percent, line_dash="dot", line_color="orange", opacity=0.7)
     fig2.add_vline(flights_for_20_percent, line_dash="dot", line_color="red", opacity=0.7)
-    fig2.update_xaxes(showline=True, linecolor="black", gridcolor="lightgray")
-    fig2.update_yaxes(showline=True, linecolor="black", gridcolor="lightgray")
 
     fig1.write_html(
         f"plotly_analysis/plotly_plots/{output_file_histogram}.html",
