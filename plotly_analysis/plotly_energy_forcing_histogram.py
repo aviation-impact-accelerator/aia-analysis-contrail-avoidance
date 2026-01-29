@@ -3,18 +3,23 @@
 from __future__ import annotations
 
 import json
+from typing import TYPE_CHECKING
 
 import matplotlib.pyplot as plt
 import numpy as np
+import plotly.express as px  # type: ignore[import-untyped]
 import polars as pl
 
+if TYPE_CHECKING:
+    from pathlib import Path
 
-def plot_energy_forcing_histogram(json_file: str, output_plot: str) -> None:
+
+def plot_energy_forcing_histogram(json_file: str | Path, output_file: str | Path) -> None:
     """Plot histogram of energy forcing per flight with cumulative forcing analysis.
 
     Args:
         json_file: Path to the JSON file containing energy forcing statistics
-        output_plot: Path to save the output plot image
+        output_file: Path to save the output plot image
     """
     # Load the JSON file
     with open(f"results/{json_file}.json") as f:  # noqa: PTH123
@@ -54,35 +59,54 @@ def plot_energy_forcing_histogram(json_file: str, output_plot: str) -> None:
 
     total_flights = len(flight_ef_summary)
 
-    # Calculate bin centers and widths
-    bin_centers = (bin_edges[:-1] + bin_edges[1:]) / 2
-    bin_widths = np.diff(bin_edges)
-
     # Create figure with two subplots
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 10))
 
     # --- Top subplot: Regular histogram ---
-    ax1.bar(bin_centers, counts, width=bin_widths, edgecolor="black", alpha=0.7, align="center")
+    fig1 = px.bar(
+        x=(bin_edges[:-1] + bin_edges[1:]) / 2,
+        y=counts,
+        labels={"x": "Total Energy Forcing per Flight (J)", "y": "Number of Flights"},
+        title="Distribution of Energy Forcing per Flight",
+    )
 
-    ax1.set_xlabel("Total Energy Forcing per Flight (J)", fontsize=12)
-    ax1.set_ylabel("Number of Flights", fontsize=12)
-    ax1.set_title("Distribution of Energy Forcing per Flight", fontsize=14, fontweight="bold")
-    ax1.grid(axis="y", alpha=0.3)
+    fig1.update_layout(
+        bargap=0.05,
+        modebar_remove=[
+            "zoom",
+            "pan",
+            "select",
+            "lasso",
+            "zoomIn",
+            "zoomOut",
+            "autoScale",
+            "resetScale",
+        ],
+        xaxis={"range": [-bin_edges[2], bin_edges[-1] + -bin_edges[2]]},
+        plot_bgcolor="white",
+        paper_bgcolor="white",
+    )
 
-    # Add text box with statistics
-    ax1.text(
-        0.98,
-        0.98,
-        f"Total flights: {total_flights:,}\n"
-        f"Total EF: {total_energy_forcing:.2e} J\n\n"
-        f"20% of forcing: {flights_for_20_percent:,} flights ({flights_for_20_percent / total_flights * 100:.1f}%)\n"
-        f"50% of forcing: {flights_for_50_percent:,} flights ({flights_for_50_percent / total_flights * 100:.1f}%)\n"
-        f"80% of forcing: {flights_for_80_percent:,} flights ({flights_for_80_percent / total_flights * 100:.1f}%)",
-        transform=ax1.transAxes,
-        fontsize=10,
-        verticalalignment="top",
-        horizontalalignment="right",
-        bbox={"boxstyle": "round", "facecolor": "wheat", "alpha": 0.5},
+    fig1.update_traces(marker_line_color="black", marker_line_width=1)
+    fig1.update_xaxes(showline=True, linecolor="black", gridcolor="lightgray")
+    fig1.update_yaxes(showline=True, linecolor="black", gridcolor="lightgray")
+
+    fig1.add_annotation(
+        text=(
+            f"Total flights: {total_flights:,}<br>"
+            f"Total EF: {total_energy_forcing:.2e} J<br><br>"
+            f"20% of forcing: {flights_for_20_percent:,} flights ({flights_for_20_percent / total_flights * 100:.1f}%)<br>"
+            f"50% of forcing: {flights_for_50_percent:,} flights ({flights_for_50_percent / total_flights * 100:.1f}%)<br>"
+            f"80% of forcing: {flights_for_80_percent:,} flights ({flights_for_80_percent / total_flights * 100:.1f}%)"
+        ),
+        xref="paper",
+        yref="paper",  # Use relative coordinates (0-1)
+        x=0.95,
+        y=0.95,  # Top left corner
+        showarrow=False,
+        bgcolor="wheat",
+        bordercolor="black",
+        borderwidth=1,
     )
 
     # --- Bottom subplot: Cumulative energy forcing ---
@@ -124,11 +148,12 @@ def plot_energy_forcing_histogram(json_file: str, output_plot: str) -> None:
     ax2.set_xlim(0, total_flights)
     ax2.set_ylim(0, 105)
 
-    plt.tight_layout()
-    plt.savefig(f"results/plots/{output_plot}.png", dpi=300, bbox_inches="tight")
+    fig.write_html(
+        f"plotly_analysis/plotly_plots/{output_file}.html", full_html=False, include_plotlyjs="cdn"
+    )
 
 
 if __name__ == "__main__":
     input_json = "energy_forcing_statistics"
-    output_plot = "energy_forcing_per_flight_histogram"
-    plot_energy_forcing_histogram(input_json, output_plot)
+    output_file = "energy_forcing_per_flight_histogram"
+    plot_energy_forcing_histogram(input_json, output_file)

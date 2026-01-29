@@ -63,7 +63,7 @@ def plot_distance_flown_by_altitude_histogram(
         bordercolor="black",
         borderwidth=1,
     )
-
+    fig.update_traces(marker_line_color="black", marker_line_width=1)
     fig.write_html(
         f"plotly_analysis/plotly_plots/{output_file}.html", full_html=False, include_plotlyjs="cdn"
     )
