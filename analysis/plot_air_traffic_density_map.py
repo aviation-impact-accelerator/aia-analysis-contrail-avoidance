@@ -126,7 +126,7 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
 
     # Plot heatmap overlay on map
     im = geoax.imshow(
-        density_matrix[::-1],  # Flip to have north at top
+        density_matrix,  # Flip to have north at top
         extent=[min_lon, max_lon + 1, min_lat, max_lat + 1],
         cmap="YlOrRd",
         aspect="auto",
@@ -173,6 +173,6 @@ if __name__ == "__main__":
     plot_air_traffic_density_matrix(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
         environmental_bounds=environmental_bounds,
-        spatial_granularity=SpatialGranularity.UK_AIRSPACE,
+        spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_plot_name="air_traffic_density_map_uk_airspace",
     )
