@@ -137,19 +137,16 @@ def create_histogram_air_traffic_density_over_time(
 
 
 def generate_energy_forcing_statistics(
-    parquet_file: str,
+    complete_flight_dataframe: pl.DataFrame,
     output_filename: str | None = None,
 ) -> None:
     """Generate energy forcing summary statistics including contrail formation analysis.
 
     Args:
-        parquet_file: Path to the parquet file containing flight data with energy forcing.
+        complete_flight_dataframe: DataFrame containing flight data with energy forcing.
         output_filename: Optional path to save the statistics as JSON. If None, no file is written.
 
     """
-    # Load the flight data with energy forcing
-    complete_flight_dataframe = pl.read_parquet(f"data/contrails_model_data/{parquet_file}.parquet")
-
     # --- General Statistics ---
     total_number_of_datapoints = len(complete_flight_dataframe)
     total_number_of_flights = complete_flight_dataframe["flight_id"].n_unique()
@@ -306,4 +303,7 @@ def generate_energy_forcing_statistics(
 if __name__ == "__main__":
     parquet_file = "2024_01_01_sample_processed_with_interpolation_with_ef"
     output_filename = "energy_forcing_statistics_sample_2024_01_01"
-    generate_energy_forcing_statistics(parquet_file, output_filename)
+
+    complete_flight_dataframe = pl.read_parquet(f"data/contrails_model_data/{parquet_file}.parquet")
+
+    generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)
