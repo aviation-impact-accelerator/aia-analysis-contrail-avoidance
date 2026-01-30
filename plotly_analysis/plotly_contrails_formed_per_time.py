@@ -183,7 +183,7 @@ def plot_contrails_formed(
 
     # Save the plot to the specified output path
     fig.write_html(
-        f"plotly_analysis/plotly_plots/{output_plot_name}.html",
+        f"results/plots/{output_plot_name}.html",
         config={"displaylogo": False},
         full_html=False,
         include_plotlyjs="cdn",

@@ -173,4 +173,3 @@ terraform/.terraform/
 data/contrails_model_data
 results/
 data/flight_data/*.parquet
-plotly_analysis/plotly_plots/*.html

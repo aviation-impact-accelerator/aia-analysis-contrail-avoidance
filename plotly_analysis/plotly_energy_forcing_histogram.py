@@ -175,14 +175,14 @@ def plot_energy_forcing_histogram(
     fig2.add_vline(flights_for_20_percent, line_dash="dot", line_color="red", opacity=0.7)
 
     fig1.write_html(
-        f"plotly_analysis/plotly_plots/{output_file_histogram}.html",
+        f"results/plots/{output_file_histogram}.html",
         config={"displaylogo": False},
         full_html=False,
         include_plotlyjs="cdn",
     )
 
     fig2.write_html(
-        f"plotly_analysis/plotly_plots/{output_file_cumulative}.html",
+        f"results/plots/{output_file_cumulative}.html",
         config={"displaylogo": False},
         full_html=False,
         include_plotlyjs="cdn",

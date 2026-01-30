@@ -158,7 +158,7 @@ def plot_airspace_polygons(
         )
 
     fig.write_html(
-        f"plotly_analysis/plotly_plots/{output_file}.html",
+        f"results/plots/{output_file}.html",
         config={"displaylogo": False, "staticPlot": True},
         full_html=False,
         include_plotlyjs="cdn",
