@@ -16,6 +16,12 @@ import polars as pl
 from aia_model_contrail_avoidance.config import FLIGHT_TIMESTAMPS_SCHEMA
 
 
+def to_float_numpy(series: pl.Series) -> np.ndarray:
+    if isinstance(series, pl.Series):
+        return series.cast(float).to_numpy()
+    return np.asarray(series, dtype=float)
+
+
 def generate_synthetic_flight(  # noqa: PLR0913
     flight_id: int,
     departure_location: tuple[float, float],
@@ -61,21 +67,60 @@ def generate_synthetic_flight(  # noqa: PLR0913
     )
 
 
-def flight_distance_from_location(
-    departure_location: tuple[float, float] | np.ndarray,
-    arrival_location: tuple[float, float] | np.ndarray,
-) -> float | np.ndarray:
-    """Calculates the distance between two locations using the Haversine formula.
+def flight_distance_from_location_vectorized(
+    departure_lat: np.ndarray,
+    departure_long: np.ndarray,
+    arrival_lat: np.ndarray,
+    arrival_long: np.ndarray,
+) -> np.ndarray:
+    """Calculates the distance between two arrays of locations using the Haversine formula.
 
     This is the same as the great circle distance.
 
     Args:
-        departure_location: Tuple of (latitude, longitude) or array of shape (n, 2).
-        arrival_location: Tuple of (latitude, longitude) or array of shape (n, 2).
+        departure_lat: Array of departure latitudes in degrees.
+        departure_long: Array of departure longitudes in degrees.
+        arrival_lat: Array of arrival latitudes in degrees.
+        arrival_long: Array of arrival longitudes in degrees.
 
     Returns:
-        Distance in nautical miles (float or array).
+        Array of distances in nautical miles.
     """
+    earth_radius = 3443.92  # Radius of the Earth in nautical miles
+
+    # Ensure input is np.ndarray of float for compatibility with np.radians
+
+    departure_lat = to_float_numpy(departure_lat)
+    departure_long = to_float_numpy(departure_long)
+    arrival_lat = to_float_numpy(arrival_lat)
+    arrival_long = to_float_numpy(arrival_long)
+
+    # Check for empty arrays to avoid ShapeError
+    if (
+        departure_lat.size == 0
+        or departure_long.size == 0
+        or arrival_lat.size == 0
+        or arrival_long.size == 0
+    ):
+        return np.array([])
+
+    departure_lat = np.radians(departure_lat)
+    departure_long = np.radians(departure_long)
+    arrival_lat = np.radians(arrival_lat)
+    arrival_long = np.radians(arrival_long)
+
+    dlat = arrival_lat - departure_lat
+    dlon = arrival_long - departure_long
+    a = np.sin(dlat / 2) ** 2 + np.cos(departure_lat) * np.cos(arrival_lat) * np.sin(dlon / 2) ** 2
+    c = 2 * np.arcsin(np.sqrt(a))
+
+    return c * earth_radius
+
+
+def flight_distance_from_location(
+    departure_location: tuple[float, float] | np.ndarray,
+    arrival_location: tuple[float, float] | np.ndarray,
+) -> float | np.ndarray:
     earth_radius = 3443.92  # Radius of the Earth in nautical miles
     _tuple_length = 2
 
