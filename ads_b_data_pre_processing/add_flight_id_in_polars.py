@@ -424,7 +424,7 @@ def identify_uk_flights(
         # assign flight IDs
         output_dataframe = assign_flight_id_to_unique_flights(
             flight_dataframe=flight_dataframe,
-            config=config,
+            config=FlightSegmentationConfig(),
             previous_flight_info_dataframe=previous_chunk_flight_info_dataframe,
         )
 
@@ -448,7 +448,7 @@ def identify_uk_flights(
             # if file exists, append to it
             if day_file.exists():
                 existing_day_df = pl.read_parquet(day_file, schema=ADS_B_PARQUET_OUTPUT_SCHEMA)
-                day_df = pl.concat([existing_day_df, day_df], how="vertical")
+                day_df = pl.concat([existing_day_df, day_df], how="vertical")  # noqa: PLW2901
             day_df.write_parquet(day_file, compression=compression)
 
     elapsed = default_timer() - overall_start
