@@ -22,6 +22,7 @@ dependencies = [
     "inquirer>=3.4.1",
     "plotly>=6.5.2",
     "polars>=1.37.1",
+    "boto3>=1.40.70",
 ]
 
 [project.urls]
