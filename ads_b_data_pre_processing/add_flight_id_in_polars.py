@@ -297,8 +297,8 @@ def seperate_flight_id_for_large_time_gaps(
 
 def assign_flight_id_to_unique_flights(
     flight_dataframe: pl.DataFrame,
+    config: FlightSegmentationConfig,
     previous_flight_info_dataframe: pl.DataFrame | None = None,
-    config: FlightSegmentationConfig | None = None,
 ) -> pl.DataFrame:
     """Segment flights based on message data in the dataframe.
 
@@ -388,8 +388,8 @@ def identify_uk_flights(
     input_files: list[Path],
     output_dir: Path,
     *,
-    config: FlightSegmentationConfig | None = None,
-    compression: Literal["lz4", "uncompressed", "snappy", "gzip", "lzo", "brotli", "zstd"] = "zstd",
+    config: FlightSegmentationConfig,
+    compression: Literal["lz4", "uncompressed", "snappy", "gzip", "brotli", "zstd"] = "zstd",
 ) -> None:
     """For each parquet file in directory, identify flights and assign flight IDs."""
     if config is None:
@@ -424,8 +424,8 @@ def identify_uk_flights(
         # assign flight IDs
         output_dataframe = assign_flight_id_to_unique_flights(
             flight_dataframe=flight_dataframe,
-            previous_flight_info_dataframe=previous_chunk_flight_info_dataframe,
             config=config,
+            previous_flight_info_dataframe=previous_chunk_flight_info_dataframe,
         )
 
         # extract last timestamp per flight_id within the last 6 hours of data
@@ -476,6 +476,7 @@ if __name__ == "__main__":
     identify_uk_flights(
         input_files=input_files,
         output_dir=output_dir,
+        config=FlightSegmentationConfig(),
     )
 
     logger.info("Done! Output written to %s", output_dir)
