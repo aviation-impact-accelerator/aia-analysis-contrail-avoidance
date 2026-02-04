@@ -1,23 +1,41 @@
-"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""  # noqa: INP001
-
-from __future__ import annotations
+from __future__ import annotations  # noqa: D100, INP001
 
 from pathlib import Path
 
-import cartopy.crs as ccrs  # type: ignore[import-untyped]
-import matplotlib.pyplot as plt
 import numpy as np
+import plotly.graph_objects as go  # type: ignore[import-untyped]
 import polars as pl
-from plot_uk_airspace import generate_uk_airspace_geoaxes
+from shapely.geometry import box
 
+from aia_model_contrail_avoidance.core_model.airspace import (
+    get_gb_airspaces,
+)
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
 
+# Define the boundary
+SOUTH, NORTH = 39.0, 70.0
+WEST, EAST = -12.0, 3.0
 
-def plot_air_traffic_density_matrix(  # noqa: PLR0915
+# Define the boundary for the graticule grid lines
+grid_north = 61
+grid_south = 45
+grid_west = -30
+grid_east = 5
+
+
+# Calculate center from bounds
+center_lat = (SOUTH + NORTH) / 2
+center_lon = (WEST + EAST) / 2 - 5  # Shift west
+
+# Create a simple map centered on the UK using Maplibre
+fig = go.Figure()
+
+
+def plot_air_traffic_density_map(  # noqa: C901, PLR0915
     parquet_file_name: str,
     environmental_bounds: dict[str, float] | None = None,
     spatial_granularity: SpatialGranularity = SpatialGranularity.ONE_DEGREE,
-    output_plot_name: str = "air_traffic_density_map",
+    output_file: str = "air_traffic_density_map",
 ) -> None:
     """Plot air traffic density as a heatmap matrix for each degree.
 
@@ -25,13 +43,12 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
         parquet_file_name: Name of the parquet file containing flight data (without extension).
         spatial_granularity: Spatial granularity for binning (default: ONE_DEGREE).
         environmental_bounds: Optional dict with lat_min, lat_max, lon_min, lon_max.
-        output_plot_name: Name of the output plot file (without extension).
+        output_file: Name of the output plot file (without extension).
 
     Raises:
         FileNotFoundError: If the parquet file is not found.
         NotImplementedError: If the chosen spatial granularity is not supported.
     """
-    # Load flight data
     parquet_file_path = Path("data/contrails_model_data") / f"{parquet_file_name}.parquet"
     if not parquet_file_path.exists():
         msg = f"Parquet file not found: {parquet_file_path}"
@@ -90,89 +107,94 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
                 lon_index = lon_bin - min_lon
                 density_matrix[lat_index, lon_index] = flight_count
 
-    elif spatial_granularity == SpatialGranularity.UK_AIRSPACE:
-        # Use UK airspace bounds
-        if environmental_bounds is None:
-            environmental_bounds = {
-                "lat_min": 49.0,
-                "lat_max": 62.0,
-                "lon_min": -8.0,
-                "lon_max": 3.0,
-            }
+        # Prepare lat, lon, z arrays for Densitymap
+        uk_airspaces = get_gb_airspaces()
+        lats = []
+        lons = []
+        zs = []
+        for i in range(density_matrix.shape[0]):
+            for j in range(density_matrix.shape[1]):
+                value = density_matrix[i, j]
+                lat0 = min_lat + i
+                lat1 = lat0 + 1
+                lon0 = min_lon + j
+                lon1 = lon0 + 1
+                cell_poly = box(lon0, lat0, lon1, lat1)
+                for airspace in uk_airspaces:
+                    if (
+                        cell_poly.intersects(airspace.shape)
+                        and lon1 <= max_lon
+                        and lat1 <= max_lat
+                        and value > 0
+                    ):
+                        lats.append(lat0 + 0.5)  # Center of the bin
+                        lons.append(lon0 + 0.5)
+                        zs.append(value)
+                        break  # Only count each cell once if it intersects any airspace
 
-        min_lat = int(environmental_bounds["lat_min"])
-        max_lat = int(environmental_bounds["lat_max"])
-        min_lon = int(environmental_bounds["lon_min"])
-        max_lon = int(environmental_bounds["lon_max"])
-
-        # Create UK airspace bins  handle out-of-bounds gracefully
-        flight_dataframe_in_uk = flight_dataframe.filter(
-            (pl.col("latitude") >= min_lat)
-            & (pl.col("latitude") <= max_lat)
-            & (pl.col("longitude") >= min_lon)
-            & (pl.col("longitude") <= max_lon)
+        fig = go.Figure(
+            go.Densitymap(
+                lat=lats,
+                lon=lons,
+                z=zs,
+                zmin=0,
+                zmax=np.max(density_matrix),
+                colorscale="Viridis",
+                colorbar={"title": "Flight Count"},
+                radius=2000,
+                showlegend=False,
+                hovertemplate="Lat: %{lat}<br>Lon: %{lon}<br>Flights: %{z}<extra></extra>",
+            )
         )
-        density_result = flight_dataframe_in_uk.select(
-            pl.col("flight_id").n_unique().alias("flight_count")
+
+    uk_airspaces = get_gb_airspaces()
+
+    for i, airspace in enumerate(uk_airspaces):  # noqa: B007
+        # Get the exterior coordinates from the shapely geometry
+        coords = np.array(airspace.shape.exterior.coords)
+        lons = coords[:, 0]  # type: ignore [assignment]
+        lats = coords[:, 1]  # type: ignore [assignment]
+
+        fig.add_trace(
+            go.Scattermap(
+                lat=lats,
+                lon=lons,
+                mode="lines",
+                line={"color": "red", "width": 5},
+                showlegend=False,
+                hoverinfo="skip",
+            )
         )
-        flight_count = int(density_result[0, "flight_count"])
-        density_matrix = np.array([[flight_count]])
-    else:
-        msg = f"Spatial granularity '{spatial_granularity}' not supported."
-        raise NotImplementedError(msg)
 
-    # Create figure with map projection
-    geoax = generate_uk_airspace_geoaxes(environmental_bounds=environmental_bounds)
+        fig.update_layout(
+            title="Flight Density Map in UK Airspace",
+            map_center_lon=center_lon,
+            map_center_lat=center_lat,
+            map_zoom=3.5,
+            margin={"l": 0, "r": 0, "t": 40, "b": 0},
+            showlegend=False,
+        )
 
-    # Plot heatmap overlay on map
-    im = geoax.imshow(
-        density_matrix,  # Flip to have north at top
-        extent=[min_lon, max_lon + 1, min_lat, max_lat + 1],
-        cmap="YlOrRd",
-        aspect="auto",
-        origin="lower",
-        transform=ccrs.PlateCarree(),
-        alpha=0.7,  # Semi-transparent to see map features underneath
+    fig.write_html(
+        f"results/plots/{output_file}.html",
+        config={
+            "displaylogo": False,
+        },
+        full_html=False,
+        include_plotlyjs="cdn",
     )
-
-    # Add gridlines
-    gl = geoax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.5, linestyle="--")
-    gl.top_labels = False
-    gl.right_labels = False
-
-    # Labels and title
-    geoax.set_title(
-        "Air Traffic Density per Degree (1° x 1° Grid) - UK Airspace",
-        fontsize=14,
-        fontweight="bold",
-    )
-
-    # Add colorbar
-    cbar = plt.colorbar(im, ax=geoax, orientation="vertical", pad=0.1)
-    cbar.set_label("Number of Unique Flights", fontsize=11, fontweight="bold")
-
-    # Tight layout
-    plt.tight_layout()
-
-    # Save figure
-    output_path = Path("results/plots") / f"{output_plot_name}.png"
-    output_path.parent.mkdir(parents=True, exist_ok=True)
-    plt.savefig(output_path, dpi=300, bbox_inches="tight")
-    print(f"Plot saved to {output_path}")
-
-    plt.close()
 
 
 if __name__ == "__main__":
     environmental_bounds = {
-        "lat_min": 49.0,
-        "lat_max": 62.0,
-        "lon_min": -8.0,
-        "lon_max": 3.0,
+        "lat_min": 45.0,
+        "lat_max": 61.0,
+        "lon_min": -30.0,
+        "lon_max": 5.0,
     }
-    plot_air_traffic_density_matrix(
+    plot_air_traffic_density_map(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
         environmental_bounds=environmental_bounds,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
-        output_plot_name="air_traffic_density_map_uk_airspace",
+        output_file="better_air_traffic_density_map_uk_airspace",
     )
