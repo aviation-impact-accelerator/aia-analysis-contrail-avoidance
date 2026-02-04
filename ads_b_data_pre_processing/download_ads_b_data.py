@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import boto3
+import boto3  # type: ignore[import-untyped]
 import polars as pl
 
 if TYPE_CHECKING:
