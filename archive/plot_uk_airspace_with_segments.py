@@ -1,4 +1,4 @@
-"""Plot uk airspace."""  # noqa: INP001
+"""Plot uk airspace."""
 
 from __future__ import annotations
 

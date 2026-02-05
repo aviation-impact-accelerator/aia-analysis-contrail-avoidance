@@ -1,4 +1,4 @@
-"""Plot histogram of energy forcing per flight with cumulative forcing analysis."""  # noqa: INP001
+"""Plot histogram of energy forcing per flight with cumulative forcing analysis."""
 
 from __future__ import annotations
 
