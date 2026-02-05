@@ -141,7 +141,7 @@ def plot_air_traffic_density_map(  # noqa: C901, PLR0915
                 zmax=np.max(density_matrix),
                 colorscale="Viridis",
                 colorbar={"title": "Flight Count"},
-                radius=2000,
+                radius=50,
                 showlegend=False,
                 hovertemplate="Lat: %{lat}<br>Lon: %{lon}<br>Flights: %{z}<extra></extra>",
             )

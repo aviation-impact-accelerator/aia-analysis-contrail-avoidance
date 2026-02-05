@@ -90,7 +90,9 @@ def plot_energy_forcing_histogram(
         paper_bgcolor="white",
     )
 
-    fig1.update_traces(marker_line_color="black", marker_line_width=1)
+    fig1.update_traces(
+        marker_color="rgba(133, 176, 154, 1)", marker_line_color="black", marker_line_width=1
+    )
     fig1.update_xaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
     fig1.update_yaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
 

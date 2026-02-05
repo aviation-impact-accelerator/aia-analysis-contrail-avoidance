@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import matplotlib.pyplot as plt
 import polars as pl
-from plot_uk_airspace import generate_uk_airspace_geoaxes
 
 from aia_model_contrail_avoidance.core_model.airspace import (
     find_airspace_of_flight_segment,
     get_gb_airspaces,
 )
+from archive.plot_uk_airspace import generate_uk_airspace_geoaxes
 
 
 def plot_airspace_polygons(airspaces: list) -> None:  # type: ignore[type-arg]

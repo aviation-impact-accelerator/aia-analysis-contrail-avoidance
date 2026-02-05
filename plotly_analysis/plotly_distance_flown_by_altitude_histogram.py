@@ -54,7 +54,9 @@ def plot_distance_flown_by_altitude_histogram(
         paper_bgcolor="white",
     )
 
-    fig.update_traces(marker_line_color="black", marker_line_width=1)
+    fig.update_traces(
+        marker_color="rgba(133, 176, 154, 1)", marker_line_color="black", marker_line_width=1
+    )
     fig.update_xaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
     fig.update_yaxes(showline=True, linecolor="black", gridcolor="lightgray", mirror=True)
 
