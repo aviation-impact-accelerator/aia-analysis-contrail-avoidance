@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import datetime
 import enum
+import logging
 import math
 
 import numpy as np
@@ -13,12 +14,20 @@ from aia_model_contrail_avoidance.config import ADS_B_SCHEMA_CLEANED
 from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
 from aia_model_contrail_avoidance.core_model.flights import flight_distance_from_location_vectorized
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+
+# Use a named logger
+logger = logging.getLogger(__name__)
+
+
 # Global constants and enums for flight data processing
 MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 3.0  # nautical miles
 LOW_FLIGHT_LEVEL_THRESHOLD = 20.0  # flight level 20 = 2000 feet
 
-# Set to True to merge datapoints that are very close together in space (the sum of their distances to previous and next points is less than the threshold)
+# Set to True to merge datapoints that are very close together in space
 BOOL_MERGE_CLOSE_POINTS = False
+# Set to True to interpolate new datapoints for flights with large distance flown in segment
 BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = False
 
 
@@ -39,7 +48,7 @@ class TemporalFlightSubset(enum.Enum):
 
 def process_ads_b_flight_data(
     parquet_file_path: str,
-    save_filename: str,
+    path_to_save_file: str,
     departure_and_arrival_subset: FlightDepartureAndArrivalSubset,
     temporal_subset: TemporalFlightSubset,
 ) -> None:
@@ -47,7 +56,7 @@ def process_ads_b_flight_data(
 
     Args:
         parquet_file_path: Path to the parquet file containing ADS-B flight data.
-        save_filename: Filename (without extension) to save the processed DataFrame.
+        path_to_save_file: Path to save the processed parquet file.
         departure_and_arrival_subset: Enum specifying the departure and arrival airport subset.
         temporal_subset: Enum specifying the temporal subset of the data.
     """
@@ -58,9 +67,13 @@ def process_ads_b_flight_data(
     )
     cleaned_dataframe = clean_ads_b_flight_dataframe(selected_dataframe)
 
-    process_ads_b_flight_data_for_environment(cleaned_dataframe, save_filename)
+    process_ads_b_flight_data_for_environment(cleaned_dataframe, path_to_save_file)
 
-    generate_flight_info_database(save_filename, "flight_info_database")
+    flight_info_database_save_path = str(path_to_save_file).replace(
+        ".parquet", "_flight_info.parquet"
+    )
+
+    generate_flight_info_database(path_to_save_file, flight_info_database_save_path)
 
 
 def generate_flight_dataframe_from_ads_b_data(parquet_file_path: str) -> pl.DataFrame:
@@ -83,7 +96,7 @@ def generate_flight_dataframe_from_ads_b_data(parquet_file_path: str) -> pl.Data
         "departure_airport_icao",
         "arrival_airport_icao",
     ]
-    print(f"INFO: Loaded flight dataframe with {len(flight_dataframe)} rows.")
+    logger.info("Loaded flight dataframe with %d rows.", len(flight_dataframe))
 
     return flight_dataframe.select(needed_columns)
 
@@ -123,7 +136,7 @@ def select_subset_of_ads_b_flight_data(
             & pl.col("departure_airport_icao").is_in(uk_airport_icaos)
         )
 
-    print(f"INFO: After selecting subsets, the flight dataframe has {len(flight_dataframe)} rows.")
+    logger.info("After selecting subsets, the flight dataframe has %d rows.", len(flight_dataframe))
     return flight_dataframe
 
 
@@ -210,7 +223,7 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
         )
 
     length_after_cleaning = len(flight_dataframe)
-    print(f"INFO: After cleaning, the flight dataframe has {length_after_cleaning} rows.")
+    logger.info("After cleaning, the flight dataframe has %d rows.", length_after_cleaning)
 
     # reorganise columns
     flight_dataframe = flight_dataframe.select(
@@ -235,11 +248,13 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
         )
 
         length_after_merging = len(flight_dataframe)
-        print(
-            f"INFO: After merging very close points, the flight dataframe has {length_after_merging} rows."
+        logger.info(
+            "After merging very close points, the flight dataframe has %d rows.",
+            length_after_merging,
         )
-        print(
-            f"INFO: Total of {length_after_cleaning - length_after_merging} rows removed by merging very close points."
+        logger.info(
+            "Total of %d rows removed by merging very close points.",
+            length_after_cleaning - length_after_merging,
         )
 
     return flight_dataframe
@@ -306,7 +321,7 @@ def generate_interpolated_rows_of_large_distance_flights(
 
 
 def process_ads_b_flight_data_for_environment(
-    generated_dataframe: pl.DataFrame, save_filename: str
+    generated_dataframe: pl.DataFrame, save_path: str
 ) -> None:
     """Process ADS-B flight data and save cleaned DataFrame to parquet.
 
@@ -314,7 +329,7 @@ def process_ads_b_flight_data_for_environment(
 
     Args:
         generated_dataframe: DataFrame containing raw ADS-B flight data.
-        save_filename: Filename (without extension) to save the processed DataFrame.
+        save_path: Path to save the processed parquet file.
     """
     # Remove datapoints where flight level is none or negative
     dataframe_processed = generated_dataframe.filter(
@@ -324,18 +339,17 @@ def process_ads_b_flight_data_for_environment(
 
     # percentage of datapoints removed
     percentage_removed = 100 * (1 - len(dataframe_processed) / len(generated_dataframe))
-    print(f"INFO: Removed {percentage_removed:.2f}% of datapoints due to low flight level")
+    logger.info("Removed %.2f%% of datapoints due to low flight level", percentage_removed)
     # Save processed dataframe to parquet
-    dataframe_processed.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
+    dataframe_processed.write_parquet(save_path)
 
 
-def generate_flight_info_database(processed_parquet_filename: str, save_filename: str) -> None:
+def generate_flight_info_database(processed_parquet_path: str, save_path: str) -> None:
     """Generates a flight information database from processed ADS-B data."""
-    processed_parquet_file = "data/contrails_model_data/" + processed_parquet_filename + ".parquet"
-    flight_dataframe = pl.read_parquet(processed_parquet_file)
+    flight_dataframe = pl.read_parquet(processed_parquet_path)
 
     # Extract unique flight information
-    flight_info_df = flight_dataframe.select(
+    flight_info_dataframe = flight_dataframe.select(
         [
             "flight_id",
             "icao_address",
@@ -351,12 +365,17 @@ def generate_flight_info_database(processed_parquet_filename: str, save_filename
     last_timestamps = flight_dataframe.group_by("flight_id").agg(
         pl.col("timestamp").max().alias("last_message_timestamp")
     )
-    flight_info_df = flight_info_df.join(first_timestamps, on="flight_id").join(
-        last_timestamps, on="flight_id"
+    number_of_messages = flight_dataframe.group_by("flight_id").agg(
+        pl.count().alias("number_of_messages")
+    )
+    flight_info_dataframe = (
+        flight_info_dataframe.join(first_timestamps, on="flight_id")
+        .join(last_timestamps, on="flight_id")
+        .join(number_of_messages, on="flight_id")
     )
 
     # Save flight information database to parquet
-    flight_info_df.write_parquet("data/contrails_model_data/" + save_filename + ".parquet")
+    flight_info_dataframe.write_parquet(save_path)
 
 
 def merge_close_datapoints_of_flight(
