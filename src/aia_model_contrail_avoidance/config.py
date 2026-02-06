@@ -12,7 +12,7 @@ if TYPE_CHECKING:
     from polars.type_aliases import PolarsDataType
 
 ADS_B_PARQUET_INPUT_SCHEMA: dict[str, PolarsDataType] = {
-    "timestamp": pl.Datetime,
+    "timestamp": pl.String,
     "icao_address": pl.String,
     "latitude": pl.Float64,
     "longitude": pl.Float64,
