@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from aia_model_contrail_avoidance.cosip_grid_environment import (
-    generate_cosip_grid_environment,
+from aia_model_contrail_avoidance.cocip_grid_environment import (
+    generate_cocip_grid_environment,
 )
 
 if __name__ == "__main__":
@@ -15,10 +15,10 @@ if __name__ == "__main__":
     pressure_levels = (200, 225, 250, 300, 350, 400, 450)
 
     # Generate CocipGrid environment
-    generate_cosip_grid_environment(
+    generate_cocip_grid_environment(
         time_bounds=time_bounds,
         lon_bounds=lon_bounds,
         lat_bounds=lat_bounds,
         pressure_levels=pressure_levels,
-        save_filename="cosip_grid_global_week_1_2024.nc",
+        save_filename="cocip_grid_global_week_1_2024.nc",
     )

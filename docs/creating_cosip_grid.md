@@ -1,6 +1,6 @@
 # Creating a CoCIP Grid Environment for Contrail Modeling
 
-This document describes how to generate a CoCIP grid environment for contrail modeling using the `generate_cosip_grid_environment` script.
+This document describes how to generate a CoCIP grid environment for contrail modeling using the `generate_cocip_grid_environment` script.
 The process involves specifying spatial and temporal bounds, pressure levels, and downloading meteorological data from the Copernicus Climate Data Store (CDS) using the CDS API.
 
 ## Required Inputs
@@ -15,7 +15,7 @@ To generate a CoCIP grid, you need to specify the following inputs:
 
 ## Example Usage
 
-The main script to generate the grid is `generate_cosip_grid_environment.py`.
+The main script to generate the grid is `generate_cocip_grid_environment.py`.
 This will download the required meteorological data, run the CoCIP grid model, and save the results as a NetCDF file in the folder `data/energy_forcing_data`.
 
 ## Weather Data Download (CDS API)

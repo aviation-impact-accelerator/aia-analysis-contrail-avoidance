@@ -4,8 +4,8 @@ This document outlines the analysis pipeline for contrail avoidance modeling usi
 
 ## Data Preparation
 
-1. **CoCIP Grid Generation**: Use the `generate_cosip_grid_environment.py` script to create a CoCIP grid environment.
-   Specify the required spatial and temporal bounds, pressure levels, and output filename as described in the [Creating a CoCIP Grid Environment for Contrail Modeling](creating_cosip_grid.md) document.
+1. **CoCIP Grid Generation**: Use the `generate_cocip_grid_environment.py` script to create a CoCIP grid environment.
+   Specify the required spatial and temporal bounds, pressure levels, and output filename as described in the [Creating a CoCIP Grid Environment for Contrail Modeling](creating_cocip_grid.md) document.
    For this you will require meteorological data downloaded from the CDS.
    Ensure that you have registered for a CDS account and have your API key set up in `~/.cdsapirc`.
 

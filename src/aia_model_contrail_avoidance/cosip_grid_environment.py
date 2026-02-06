@@ -12,7 +12,7 @@ from pycontrails.models.humidity_scaling import HistogramMatching
 from pycontrails.models.ps_model import PSGrid
 
 
-def generate_cosip_grid_environment(
+def generate_cocip_grid_environment(
     time_bounds: tuple[str, str],
     lon_bounds: tuple[float, float],
     lat_bounds: tuple[float, float],
@@ -66,7 +66,7 @@ def generate_cosip_grid_environment(
     result.data.to_netcdf("data/energy_forcing_data/" + save_filename + ".nc")
 
 
-def plot_cosip_grid_environment(
+def plot_cocip_grid_environment(
     selected_time_index: int,
     selected_flight_level_index: int,
     environment_filename: str,
