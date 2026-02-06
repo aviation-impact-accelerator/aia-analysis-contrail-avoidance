@@ -161,7 +161,7 @@ def remove_non_uk_flights(
 def remove_erroneous_single_point_flights(
     flight_dataframe_with_flight_id: pl.DataFrame,
 ) -> pl.DataFrame:
-    """Remove flights that consist of only a single data point.
+    """Remove flights that consist of only a few data points.
 
     Args:
         flight_dataframe_with_flight_id: polars DataFrame of flight data.
@@ -169,23 +169,25 @@ def remove_erroneous_single_point_flights(
 
     Returns: dataframe with single-point flights removed and first_flight_id refactored.
     """
-    # get flight IDs that occur only once
-    flight_id_counts = (
+    # order by icao_address and timestamp
+    flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.sort(
+        ["icao_address", "timestamp"]
+    )
+    # get flight IDs that occur less than the minimum number of consecutive datapoints threshold
+    min_number_of_consecutive_datapoints = 3
+    unique_flights_with_low_counts = (
         flight_dataframe_with_flight_id.group_by("first_flight_id")
         .agg(pl.len().alias("count"))
-        .filter(pl.col("count") == 1)
+        .filter(pl.col("count") < min_number_of_consecutive_datapoints)
         .select("first_flight_id")
         .to_series()
         .to_list()
     )
     # remove timestamps with these flight IDs
     flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.filter(
-        ~pl.col("first_flight_id").is_in(flight_id_counts)
+        ~pl.col("first_flight_id").is_in(unique_flights_with_low_counts)
     )
-    # order by icao_address and timestamp
-    flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.sort(
-        ["icao_address", "timestamp"]
-    )
+
     # refactor first_flight_id to be consecutive after removing single-point flights
     return flight_dataframe_with_flight_id.with_columns(
         pl.struct(["icao_address", "unique_flight_identifier"]).rle_id().alias("first_flight_id")
