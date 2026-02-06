@@ -1,4 +1,4 @@
-"""Plot histogram of distance traveled in segment from JSON statistics file."""  # noqa: INP001
+"""Plot histogram of distance traveled in segment from JSON statistics file."""
 
 from __future__ import annotations
 

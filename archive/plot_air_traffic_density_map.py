@@ -1,4 +1,4 @@
-"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""  # noqa: INP001
+"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import cartopy.crs as ccrs  # type: ignore[import-untyped]
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
-from plot_uk_airspace import generate_uk_airspace_geoaxes
 
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
+from archive.plot_uk_airspace import generate_uk_airspace_geoaxes
 
 
 def plot_air_traffic_density_matrix(  # noqa: PLR0915
@@ -126,7 +126,7 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
 
     # Plot heatmap overlay on map
     im = geoax.imshow(
-        density_matrix[::-1],  # Flip to have north at top
+        density_matrix,  # Flip to have north at top
         extent=[min_lon, max_lon + 1, min_lat, max_lat + 1],
         cmap="YlOrRd",
         aspect="auto",
@@ -173,6 +173,6 @@ if __name__ == "__main__":
     plot_air_traffic_density_matrix(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
         environmental_bounds=environmental_bounds,
-        spatial_granularity=SpatialGranularity.UK_AIRSPACE,
+        spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_plot_name="air_traffic_density_map_uk_airspace",
     )

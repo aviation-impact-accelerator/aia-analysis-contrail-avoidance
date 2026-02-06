@@ -44,7 +44,7 @@ def plot_airspace_polygons(
         map={
             "style": "carto-voyager",  # Clean, dark style (free, no API key)
             "center": {"lat": center_lat, "lon": center_lon},
-            "zoom": 2.8,  # Manually tuned to fit the bounds
+            "zoom": 3.5,  # Manually tuned to fit the bounds
         },
         margin={"l": 0, "r": 0, "t": 40, "b": 0},
         showlegend=False,  # Remove external legend
@@ -83,7 +83,7 @@ def plot_airspace_polygons(
         label = f"{abs(lon)}°W" if lon < 0 else f"{lon}°E" if lon > 0 else "0°"
         fig.add_trace(
             go.Scattermap(
-                lat=[grid_south - 0.5],  # Slightly above bottom edge
+                lat=[grid_south - 0.6],  # Slightly above bottom edge
                 lon=[lon],
                 mode="text",
                 text=[label],
@@ -113,7 +113,7 @@ def plot_airspace_polygons(
         fig.add_trace(
             go.Scattermap(
                 lat=[lat],
-                lon=[grid_west - 0.7],  # Slightly right of left edge
+                lon=[grid_west - 1.0],  # Slightly right of left edge
                 mode="text",
                 text=[label],
                 textfont={"size": 10, "color": "black"},
@@ -159,7 +159,9 @@ def plot_airspace_polygons(
 
     fig.write_html(
         f"results/plots/{output_file}.html",
-        config={"displaylogo": False, "staticPlot": True},
+        config={
+            "displaylogo": False,
+        },
         full_html=False,
         include_plotlyjs="cdn",
     )

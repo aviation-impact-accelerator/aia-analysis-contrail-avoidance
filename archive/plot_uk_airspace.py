@@ -1,4 +1,4 @@
-"""Script to visualize UK airspace on a map with specified constraints."""  # noqa: INP001
+"""Script to visualize UK airspace on a map with specified constraints."""
 
 from __future__ import annotations
 
