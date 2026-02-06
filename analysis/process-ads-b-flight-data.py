@@ -22,15 +22,19 @@ if __name__ == "__main__":
     temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
     flight_departure_and_arrival = FlightDepartureAndArrivalSubset.ALL
 
-    parquet_file_paths = list(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+    parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+    # if directoy does not exist, create it
+    PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
+
     for input_file in parquet_file_paths:
         print("Processing file:", input_file.name)
         parquet_file_path = str(input_file)
         save_filename = input_file.stem
+        full_save_path = PROCESSED_FLIGHTS_WITH_IDS_DIR / f"{save_filename}.parquet"
 
         process_ads_b_flight_data(
             parquet_file_path,
-            save_filename,
+            full_save_path,
             flight_departure_and_arrival,
             temporal_flight_subset,
         )
