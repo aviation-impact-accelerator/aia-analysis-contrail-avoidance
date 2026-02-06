@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 import time
 from pathlib import Path
 
@@ -10,6 +11,11 @@ from aia_model_contrail_avoidance.flight_data_processing import (
     TemporalFlightSubset,
     process_ads_b_flight_data,
 )
+
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
 
 # input directory with ADS-B data files with flight ids added
 FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_with_flight_ids")
@@ -27,7 +33,7 @@ if __name__ == "__main__":
     PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
 
     for input_file in parquet_file_paths:
-        print("Processing file:", input_file.name)
+        logger.info("Processing file: %s", input_file.name)
         parquet_file_path = str(input_file)
         save_filename = input_file.stem
         full_save_path = PROCESSED_FLIGHTS_WITH_IDS_DIR / f"{save_filename}.parquet"
@@ -40,4 +46,4 @@ if __name__ == "__main__":
         )
     end = time.time()
     length = end - start
-    print("Data processing completed in", round(length / 60, 1), "minutes.")
+    logger.info("Data processing completed in %.1f minutes.", round(length / 60, 1))
