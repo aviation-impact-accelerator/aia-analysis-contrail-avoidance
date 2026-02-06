@@ -17,6 +17,35 @@ def get_gb_airspaces() -> list:  # type: ignore[type-arg]
     return selected
 
 
+def find_uk_airspace_of_flight_segment(
+    flight_dataframe: pl.DataFrame,
+) -> pl.DataFrame:
+    """Check if a given flight segment is within any of the UK airspaces."""
+    gb_airspaces = get_gb_airspaces()
+    # remove datapoints outside of UK environment
+    flight_dataframe_within_uk = flight_dataframe.filter(
+        pl.col("longitude").is_between(-8, 3) & pl.col("latitude").is_between(49, 62)
+    )
+    # add airspace information to dataframe
+    datapoints_within_uk = find_airspace_of_flight_segment(flight_dataframe_within_uk, gb_airspaces)
+
+    flight_dataframe_outside_uk = flight_dataframe.filter(
+        ~(pl.col("longitude").is_between(-8, 3) & pl.col("latitude").is_between(49, 62))
+    )
+    # add airspace column with None for datapoints outside of UK environment
+    flight_dataframe_outside_uk = flight_dataframe_outside_uk.with_columns(
+        pl.lit(None).alias("airspace")
+    )
+
+    # add airspace information to original dataframe, filling in None for datapoints outside of UK environment
+    return pl.concat(
+        [
+            datapoints_within_uk,
+            flight_dataframe_outside_uk,
+        ]
+    )
+
+
 def find_airspace_of_flight_segment(
     flight_dataframe: pl.DataFrame,
     airspaces: list,  # type: ignore[type-arg]
