@@ -7,8 +7,7 @@ from pathlib import Path
 import polars as pl
 
 from aia_model_contrail_avoidance.core_model.airspace import (
-    find_airspace_of_flight_segment,
-    get_gb_airspaces,
+    find_uk_airspace_of_flight_segment,
 )
 from aia_model_contrail_avoidance.core_model.environment import (
     calculate_total_energy_forcing,
@@ -39,9 +38,8 @@ def add_energy_forcing_to_flight_info_database(
     energy_forcing_per_flight = pl.DataFrame(
         {"flight_id": unique_flight_ids, "total_energy_forcing": total_ef_list}
     )
-
-    flight_info_df = pl.read_parquet("data/contrails_model_data/flight_info_database.parquet")
-
+    # Load the existing flight information database (assuming it's a parquet file)
+    flight_info_df = pl.read_parquet(flight_info_with_ef_file_path)
     # Join the two dataframes on flight_id
     joined_df = flight_info_df.join(energy_forcing_per_flight, on="flight_id", how="inner")
     # Save the joined dataframe to a new parquet file
@@ -88,8 +86,7 @@ def calculate_energy_forcing_for_flights(
     print(f"Processed {len(flight_data_with_ef)} data points")
 
     # adding airspace information to dataframe
-    gb_airspaces = get_gb_airspaces()
-    flight_data_with_ef = find_airspace_of_flight_segment(flight_data_with_ef, gb_airspaces)
+    flight_data_with_ef = find_uk_airspace_of_flight_segment(flight_data_with_ef)
     print("Added airspace information to flight data.")
 
     # Save the flight data with energy forcing to parquet
@@ -100,9 +97,9 @@ def calculate_energy_forcing_for_flights(
 
 
 if __name__ == "__main__":
-    FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_processed_flights")
-    SAVE_FLIGHTS_WITH_EF_DIR = Path("/home/as3091/ads_b_flights_with_ef")
-    SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("/home/as3091/ads_b_flight_info_with_ef")
+    FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_processed_flights").expanduser()
+    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
+    SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("~/ads_b_processed_flights_info").expanduser()
 
     if not SAVE_FLIGHTS_WITH_EF_DIR.exists():
         SAVE_FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
@@ -119,7 +116,7 @@ if __name__ == "__main__":
             flight_dataframe_path=str(file_path),
             parquet_file_with_ef=str(SAVE_FLIGHTS_WITH_EF_DIR / f"{output_file_name}.parquet"),
             flight_info_with_ef_file_path=str(
-                SAVE_FLIGHTS_INFO_WITH_EF_DIR / f"{output_file_name}_flight_info.parquet"
+                SAVE_FLIGHTS_INFO_WITH_EF_DIR / f"{file_path.stem}_flight_info.parquet"
             ),
         )
         print(output_file_name)
