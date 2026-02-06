@@ -1,4 +1,4 @@
-"""Generates a summary json file for the sample flight data, including a histogram of distance traveled in segment."""  # noqa: INP001
+"""Generates a summary json file for the sample flight data, including a histogram of distance traveled in segment."""
 
 from __future__ import annotations
 

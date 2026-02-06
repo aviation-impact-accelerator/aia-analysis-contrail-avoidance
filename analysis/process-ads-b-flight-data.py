@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+import sys
 import time
 from pathlib import Path
 
@@ -18,9 +19,9 @@ logger = logging.getLogger(__name__)
 
 
 # input directory with ADS-B data files with flight ids added
-FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_with_flight_ids")
+FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_with_flight_ids").expanduser()
 
-PROCESSED_FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_processed_flights")
+PROCESSED_FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_processed_flights").expanduser()
 
 
 if __name__ == "__main__":
@@ -28,9 +29,26 @@ if __name__ == "__main__":
     temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
     flight_departure_and_arrival = FlightDepartureAndArrivalSubset.ALL
 
-    parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+    # if directoy does not exist, throw error
+    if FLIGHTS_WITH_IDS_DIR.exists() and FLIGHTS_WITH_IDS_DIR.is_dir():
+        parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+
+    else:
+        logger.error(
+            "\n Input directory not found: %s This directory will"
+            " be created. \n Add the parquet files before running the script again.",
+            FLIGHTS_WITH_IDS_DIR,
+        )
+        FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
+        sys.exit(1)
+
     # if directoy does not exist, create it
-    PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
+    if not PROCESSED_FLIGHTS_WITH_IDS_DIR.exists() and not PROCESSED_FLIGHTS_WITH_IDS_DIR.is_dir():
+        logger.info(
+            "Output directory created at: %s.",
+            PROCESSED_FLIGHTS_WITH_IDS_DIR,
+        )
+        PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
 
     for input_file in parquet_file_paths:
         logger.info("Processing file: %s", input_file.name)
