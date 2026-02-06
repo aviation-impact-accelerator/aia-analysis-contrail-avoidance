@@ -77,7 +77,7 @@ ADS_B_SCHEMA_CLEANED: dict[str, PolarsDataType] = {
     "latitude": pl.Float64,
     "longitude": pl.Float64,
     "flight_level": pl.Float64,
-    "flight_id": pl.UInt32,
+    "flight_id": pl.Int32,
     "icao_address": pl.String,
     "departure_airport_icao": pl.String,
     "arrival_airport_icao": pl.String,
@@ -99,13 +99,13 @@ FLIGHT_INFORMATION_SCHEMA: dict[str, PolarsDataType] = {
 }
 
 FLIGHT_TIMESTAMPS_SCHEMA: Mapping[str, PolarsDataType] = {
-    "flight_id": pl.Int64,
+    "flight_id": pl.Int32,
     "departure_location": pl.List(pl.Float64),
     "arrival_location": pl.List(pl.Float64),
     "departure_time": pl.Datetime,
     "timestamp": pl.Datetime,
     "latitude": pl.Float64,
     "longitude": pl.Float64,
-    "flight_level": pl.Int64,
+    "flight_level": pl.Int32,
     "distance_flown_in_segment": pl.Float64,
 }
