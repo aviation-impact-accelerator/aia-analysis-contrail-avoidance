@@ -468,7 +468,7 @@ if __name__ == "__main__":
 
     logger.info("Running flight identification on all files")
 
-    input_files = list(FLIGHT_DATAFRAME_DIR.glob("*.parquet"))
+    input_files = sorted(FLIGHT_DATAFRAME_DIR.glob("*.parquet"))
     output_dir = FLIGHTS_WITH_IDS_DIR
 
     first_input_file = [input_files[0]]  # For testing, only process first file
