@@ -50,7 +50,7 @@ def create_grid_environment(environment_file_name: str) -> xr.DataArray:
 
 def create_grid_environment_uk_ads_b_jan() -> xr.DataArray:
     """Creates grid environment from COSIP grid data."""
-    return create_grid_environment("cosip_grid_uk_airspace_jan01_2024")
+    return create_grid_environment("cocip_grid_uk_airspace_jan01_2024")
 
 
 def create_synthetic_grid_environment() -> xr.DataArray:
