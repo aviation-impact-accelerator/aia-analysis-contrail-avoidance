@@ -20,5 +20,5 @@ if __name__ == "__main__":
         lon_bounds=lon_bounds,
         lat_bounds=lat_bounds,
         pressure_levels=pressure_levels,
-        save_filename="cocip_grid_global_week_1_2024.nc",
+        save_filename="cocip_grid_global_week_1_2024",
     )
