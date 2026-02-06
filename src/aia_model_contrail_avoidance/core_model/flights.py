@@ -17,6 +17,13 @@ from aia_model_contrail_avoidance.config import FLIGHT_TIMESTAMPS_SCHEMA
 
 
 def to_float_numpy(series: pl.Series) -> np.ndarray:
+    """Convert a Polars Series to a NumPy array of floats.
+
+    Args:
+        series: A Polars Series to convert.
+
+    Returns: A NumPy array of floats.
+    """
     if isinstance(series, pl.Series):
         return series.cast(float).to_numpy()
     return np.asarray(series, dtype=float)
@@ -121,6 +128,16 @@ def flight_distance_from_location(
     departure_location: tuple[float, float] | np.ndarray,
     arrival_location: tuple[float, float] | np.ndarray,
 ) -> float | np.ndarray:
+    """Calculates the distance between two locations using the Haversine formula.
+
+    Args:
+        departure_location: Tuple of (latitude, longitude) for departure or array of such tuples.
+        arrival_location: Tuple of (latitude, longitude) for arrival or array of such tuples.
+
+    Returns:
+        Distance in nautical miles as a float if input is a single tuple, or an array of distances
+            if input is arrays of tuples.
+    """
     earth_radius = 3443.92  # Radius of the Earth in nautical miles
     _tuple_length = 2
 
