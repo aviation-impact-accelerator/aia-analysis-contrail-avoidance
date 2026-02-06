@@ -97,10 +97,15 @@ def flight_distance_from_location_vectorized(
 
     # Ensure input is np.ndarray of float for compatibility with np.radians
 
-    departure_lat = to_float_numpy(departure_lat)
-    departure_long = to_float_numpy(departure_long)
-    arrival_lat = to_float_numpy(arrival_lat)
-    arrival_long = to_float_numpy(arrival_long)
+    # Only convert if input is a pl.Series, else assume np.ndarray
+    if isinstance(departure_lat, pl.Series):
+        departure_lat = to_float_numpy(departure_lat)
+    if isinstance(departure_long, pl.Series):
+        departure_long = to_float_numpy(departure_long)
+    if isinstance(arrival_lat, pl.Series):
+        arrival_lat = to_float_numpy(arrival_lat)
+    if isinstance(arrival_long, pl.Series):
+        arrival_long = to_float_numpy(arrival_long)
 
     # Check for empty arrays to avoid ShapeError
     if (
@@ -121,7 +126,7 @@ def flight_distance_from_location_vectorized(
     a = np.sin(dlat / 2) ** 2 + np.cos(departure_lat) * np.cos(arrival_lat) * np.sin(dlon / 2) ** 2
     c = 2 * np.arcsin(np.sqrt(a))
 
-    return c * earth_radius
+    return c * earth_radius  # type: ignore[no-any-return]
 
 
 def flight_distance_from_location(

@@ -184,10 +184,10 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
         pl.Series(
             "distance_flown_in_segment",
             flight_distance_from_location_vectorized(
-                pl.Series(flight_dataframe["latitude"]),
-                pl.Series(flight_dataframe["longitude"]),
-                pl.Series(flight_dataframe["prev_lat"]),
-                pl.Series(flight_dataframe["prev_lon"]),
+                flight_dataframe["latitude"].to_numpy(),
+                flight_dataframe["longitude"].to_numpy(),
+                flight_dataframe["prev_lat"].to_numpy(),
+                flight_dataframe["prev_lon"].to_numpy(),
             ),
         )
     )

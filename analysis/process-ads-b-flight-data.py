@@ -40,7 +40,7 @@ if __name__ == "__main__":
 
         process_ads_b_flight_data(
             parquet_file_path,
-            full_save_path,
+            str(full_save_path),
             flight_departure_and_arrival,
             temporal_flight_subset,
         )
