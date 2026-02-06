@@ -2,7 +2,9 @@
 
 from __future__ import annotations
 
+import logging
 import time
+from pathlib import Path
 
 from aia_model_contrail_avoidance.flight_data_processing import (
     FlightDepartureAndArrivalSubset,
@@ -10,19 +12,38 @@ from aia_model_contrail_avoidance.flight_data_processing import (
     process_ads_b_flight_data,
 )
 
+# Configure logging
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
+logger = logging.getLogger(__name__)
+
+
+# input directory with ADS-B data files with flight ids added
+FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_with_flight_ids")
+
+PROCESSED_FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_processed_flights")
+
+
 if __name__ == "__main__":
     start = time.time()
-    parquet_file_path = "data/flight_data/2024_01_01_sample.parquet"
-    save_filename = "2024_01_01_sample_processed_with_interpolation"
     temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
-    flight_departure_and_arrival = FlightDepartureAndArrivalSubset.UK
+    flight_departure_and_arrival = FlightDepartureAndArrivalSubset.ALL
 
-    process_ads_b_flight_data(
-        parquet_file_path,
-        save_filename,
-        flight_departure_and_arrival,
-        temporal_flight_subset,
-    )
+    parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+    # if directoy does not exist, create it
+    PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
+
+    for input_file in parquet_file_paths:
+        logger.info("Processing file: %s", input_file.name)
+        parquet_file_path = str(input_file)
+        save_filename = input_file.stem
+        full_save_path = PROCESSED_FLIGHTS_WITH_IDS_DIR / f"{save_filename}.parquet"
+
+        process_ads_b_flight_data(
+            parquet_file_path,
+            str(full_save_path),
+            flight_departure_and_arrival,
+            temporal_flight_subset,
+        )
     end = time.time()
     length = end - start
-    print("Data processing completed in", round(length / 60, 1), "minutes.")
+    logger.info("Data processing completed in %.1f minutes.", round(length / 60, 1))
