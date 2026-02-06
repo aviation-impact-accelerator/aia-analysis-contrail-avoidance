@@ -17,6 +17,10 @@ from aia_model_contrail_avoidance.core_model.flights import flight_distance_from
 MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 3.0  # nautical miles
 LOW_FLIGHT_LEVEL_THRESHOLD = 20.0  # flight level 20 = 2000 feet
 
+# Set to True to merge datapoints that are very close together in space (the sum of their distances to previous and next points is less than the threshold)
+BOOL_MERGE_CLOSE_POINTS = False
+BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = False
+
 
 class FlightDepartureAndArrivalSubset(enum.Enum):
     """Enum for selecting subsets of flight data based on departure and arrival airports."""
@@ -199,10 +203,12 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
         ]
     )
 
-    # for large distance_flown_in_segment, create new rows with interpolated values
-    # flight_dataframe = generate_interpolated_rows_of_large_distance_flights(
-    #     flight_dataframe, max_distance=MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS
-    # )
+    if BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS:
+        # for large distance_flown_in_segment, create new rows with interpolated values
+        flight_dataframe = generate_interpolated_rows_of_large_distance_flights(
+            flight_dataframe, max_distance=MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS
+        )
+
     length_after_cleaning = len(flight_dataframe)
     print(f"INFO: After cleaning, the flight dataframe has {length_after_cleaning} rows.")
 
@@ -220,19 +226,21 @@ def clean_ads_b_flight_dataframe(flight_dataframe: pl.DataFrame) -> pl.DataFrame
             "distance_flown_in_segment",
         ]
     )
+    if BOOL_MERGE_CLOSE_POINTS:
+        # Merge datapoints that are very close together in space
+        # (the sum of their distances to previous and next points is less than the threshold)
 
-    # Merge datapoints that are very close together in space (the sum of their distances to previous and next points is less than the threshold)
+        flight_dataframe = merge_close_datapoints_of_flight(
+            flight_dataframe, MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS
+        )
 
-    # flight_dataframe = merge_close_datapoints_of_flight(
-    # flight_dataframe, MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS )
-
-    length_after_merging = len(flight_dataframe)
-    print(
-        f"INFO: After merging very close points, the flight dataframe has {length_after_merging} rows."
-    )
-    print(
-        f"INFO: Total of {length_after_cleaning - length_after_merging} rows removed by merging very close points."
-    )
+        length_after_merging = len(flight_dataframe)
+        print(
+            f"INFO: After merging very close points, the flight dataframe has {length_after_merging} rows."
+        )
+        print(
+            f"INFO: Total of {length_after_cleaning - length_after_merging} rows removed by merging very close points."
+        )
 
     return flight_dataframe
 
