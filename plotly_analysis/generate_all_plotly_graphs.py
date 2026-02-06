@@ -5,6 +5,7 @@ from __future__ import annotations
 from better_plotly_air_traffic_density import plot_air_traffic_density_map
 from plotly_contrails_formed_per_time import plot_contrails_formed
 from plotly_distance_flown_by_altitude_histogram import plot_distance_flown_by_altitude_histogram
+from plotly_domestic_international_flights import plot_domestic_international_flights_pie_chart
 from plotly_energy_forcing_histogram import plot_energy_forcing_histogram
 from plotly_uk_airspace import plot_airspace_polygons
 
@@ -42,6 +43,11 @@ def generate_all_plotly() -> None:
         environmental_bounds=environmental_bounds,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="air_traffic_density_map_uk_airspace",
+    )
+
+    plot_domestic_international_flights_pie_chart(
+        json_file="2024_01_01_sample_stats_processed",
+        output_file="domestic_international_flights_pie_chart",
     )
 
 

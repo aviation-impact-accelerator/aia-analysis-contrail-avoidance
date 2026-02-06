@@ -1,4 +1,4 @@
-"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""  # noqa: INP001
+"""Plot air traffic density as a matrix for each degree using SpatialGranularity enum."""
 
 from __future__ import annotations
 
@@ -8,9 +8,9 @@ import cartopy.crs as ccrs  # type: ignore[import-untyped]
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
-from plot_uk_airspace import generate_uk_airspace_geoaxes
 
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
+from archive.plot_uk_airspace import generate_uk_airspace_geoaxes
 
 
 def plot_air_traffic_density_matrix(  # noqa: PLR0915
