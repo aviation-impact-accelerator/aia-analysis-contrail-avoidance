@@ -12,7 +12,7 @@ import polars as pl
 
 from aia_model_contrail_avoidance.config import (
     ADS_B_PARQUET_INPUT_SCHEMA,
-    ADS_B_PARQUET_OUTPUT_SCHEMA,
+    ADS_B_PARQUET_OUTPUT_SCHEMA_WITH_FLIGHT_ID,
 )
 from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
 
@@ -449,7 +449,9 @@ def identify_uk_flights(
             day_file = output_dir / f"UK_flights_day_{day_str}.parquet"
             # if file exists, append to it
             if day_file.exists():
-                existing_day_df = pl.read_parquet(day_file, schema=ADS_B_PARQUET_OUTPUT_SCHEMA)
+                existing_day_df = pl.read_parquet(
+                    day_file, schema=ADS_B_PARQUET_OUTPUT_SCHEMA_WITH_FLIGHT_ID
+                )
                 day_df = pl.concat([existing_day_df, day_df], how="vertical")  # noqa: PLW2901
             day_df.write_parquet(day_file, compression=compression)
 

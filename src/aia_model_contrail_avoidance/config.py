@@ -11,6 +11,39 @@ if TYPE_CHECKING:
 
     from polars.type_aliases import PolarsDataType
 
+ADS_B_PARQUET_INPUT_SCHEMA: dict[str, PolarsDataType] = {
+    "timestamp": pl.Datetime,
+    "icao_address": pl.String,
+    "latitude": pl.Float64,
+    "longitude": pl.Float64,
+    "altitude_baro": pl.Int32,
+    "altitude_gnss": pl.Int32,
+    "heading": pl.Float32,
+    "aircraft_type_icao": pl.String,
+    "aircraft_type_name": pl.String,
+    "airline_iata": pl.String,
+    "flight_number": pl.String,
+    "departure_airport_icao": pl.String,
+    "arrival_airport_icao": pl.String,
+}
+
+ADS_B_PARQUET_OUTPUT_SCHEMA_WITH_FLIGHT_ID: dict[str, PolarsDataType] = {
+    "timestamp": pl.Datetime,
+    "icao_address": pl.String,
+    "latitude": pl.Float64,
+    "longitude": pl.Float64,
+    "altitude_baro": pl.Int32,
+    "altitude_gnss": pl.Int32,
+    "heading": pl.Float32,
+    "aircraft_type_icao": pl.String,
+    "aircraft_type_name": pl.String,
+    "airline_iata": pl.String,
+    "flight_number": pl.String,
+    "departure_airport_icao": pl.String,
+    "arrival_airport_icao": pl.String,
+    "flight_id": pl.Int32,
+    "flight_day": pl.Int16,
+}
 
 ADS_B_PARQUET_SCHEMA_WITH_FLIGHT_ID: dict[str, PolarsDataType] = {
     "timestamp": pl.Datetime,
