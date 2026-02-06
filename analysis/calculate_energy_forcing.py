@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import polars as pl
 
 from aia_model_contrail_avoidance.core_model.airspace import (
@@ -13,65 +15,25 @@ from aia_model_contrail_avoidance.core_model.environment import (
     create_grid_environment,
     run_flight_data_through_environment,
 )
-from aia_model_contrail_avoidance.core_model.flights import read_ads_b_flight_dataframe
+
+BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT = False
 
 
-def calculate_energy_forcing_for_flights(
-    parquet_file_with_ef: str,
-    flight_info_with_ef_file_name: str,
-    flight_dataframe_path: str | None = None,
+def add_energy_forcing_to_flight_info_database(
+    flight_dataframe_with_ef: pl.DataFrame,
+    flight_info_with_ef_file_path: str,
 ) -> None:
-    """Calculate energy forcing for flight data using the UK ADS-B January environment.
+    """Add energy forcing information to the flight information database.
 
     Args:
-        parquet_file_with_ef: Path to save the flight timestamps with energy forcing as a parquet
-            file.
-        flight_info_with_ef_file_name: Path to save the flight information with energy forcing as a
+        flight_dataframe_with_ef: Polars DataFrame containing flight data with energy forcing
+            information.
+        flight_info_with_ef_file_path: Path to save the flight information with energy forcing as a
             parquet file.
-        flight_dataframe_path: Optional path to a Polars DataFrame containing flight data. If None,
-        it will be read from a parquet file.
     """
-    # Load the processed flight data
-    if flight_dataframe_path is None:
-        flight_dataframe = read_ads_b_flight_dataframe()
-    else:
-        flight_dataframe = pl.read_parquet(flight_dataframe_path)
-
-    print("Loading environment data...")
-    environment = create_grid_environment("cocipgrid_uk_adsb_jan_result")
-
-    # environmental bounds for UK ADS-B January environment
-    environmental_bounds = {
-        "lat_min": 49.0,
-        "lat_max": 62.0,
-        "lon_min": -8.0,
-        "lon_max": 3.0,
-    }
-
-    # Remove datapoints that are outside the environment (latitude and longitude bounds)
-    flight_dataframe = flight_dataframe.filter(
-        (pl.col("latitude") >= environmental_bounds["lat_min"])
-        & (pl.col("latitude") <= environmental_bounds["lat_max"])
-        & (pl.col("longitude") >= environmental_bounds["lon_min"])
-        & (pl.col("longitude") <= environmental_bounds["lon_max"])
-    )
-    print("\nRunning flight data through environment...")
-    flight_data_with_ef = run_flight_data_through_environment(flight_dataframe, environment)
-    print(f"Processed {len(flight_data_with_ef)} data points")
-
-    # adding airspace information to dataframe
-    gb_airspaces = get_gb_airspaces()
-    flight_data_with_ef = find_airspace_of_flight_segment(flight_data_with_ef, gb_airspaces)
-    print("Added airspace information to flight data.")
-
-    # Save the flight data with energy forcing to parquet
-    flight_data_with_ef.write_parquet(
-        "data/contrails_model_data/" + parquet_file_with_ef + ".parquet"
-    )
-
     # Calculate total energy forcing for each unique flight
-    unique_flight_ids = flight_data_with_ef["flight_id"].unique().to_list()
-    total_ef_list = calculate_total_energy_forcing(unique_flight_ids, flight_data_with_ef)
+    unique_flight_ids = flight_dataframe_with_ef["flight_id"].unique().to_list()
+    total_ef_list = calculate_total_energy_forcing(unique_flight_ids, flight_dataframe_with_ef)
 
     # Create a summary dataframe with flight information and total energy forcing
     energy_forcing_per_flight = pl.DataFrame(
@@ -82,21 +44,82 @@ def calculate_energy_forcing_for_flights(
 
     # Join the two dataframes on flight_id
     joined_df = flight_info_df.join(energy_forcing_per_flight, on="flight_id", how="inner")
+    # Save the joined dataframe to a new parquet file
+    joined_df.write_parquet(file=flight_info_with_ef_file_path, mkdir=True)
 
-    # Save the joined dataframe
-    joined_df.write_parquet(
-        "data/contrails_model_data/" + flight_info_with_ef_file_name + "_with_flight_info.parquet"
-    )
+
+def calculate_energy_forcing_for_flights(
+    flight_dataframe_path: str,
+    parquet_file_with_ef: str,
+    flight_info_with_ef_file_path: str,
+) -> None:
+    """Calculate energy forcing for flight data using the UK ADS-B January environment.
+
+    Args:
+        flight_dataframe_path: Path to the flight data parquet file.
+        parquet_file_with_ef: Path to save the flight timestamps with energy forcing as a parquet
+            file.
+        flight_info_with_ef_file_path: Path to save the flight information with energy forcing as a
+            parquet file.
+    """
+    # Load the processed flight data from parquet file
+    flight_dataframe = pl.read_parquet(flight_dataframe_path)
+
+    print("Loading environment data...")
+    environment = create_grid_environment("cocip_grid_global_week_1_2024")
+
+    if BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT:
+        # environmental bounds for UK ADS-B January environment
+        environmental_bounds = {
+            "lat_min": 49.0,
+            "lat_max": 62.0,
+            "lon_min": -8.0,
+            "lon_max": 3.0,
+        }
+        # Remove datapoints that are outside the environment (latitude and longitude bounds)
+        flight_dataframe = flight_dataframe.filter(
+            (pl.col("latitude") >= environmental_bounds["lat_min"])
+            & (pl.col("latitude") <= environmental_bounds["lat_max"])
+            & (pl.col("longitude") >= environmental_bounds["lon_min"])
+            & (pl.col("longitude") <= environmental_bounds["lon_max"])
+        )
+    print("\nRunning flight data through environment...")
+    flight_data_with_ef = run_flight_data_through_environment(flight_dataframe, environment)
+    print(f"Processed {len(flight_data_with_ef)} data points")
+
+    # adding airspace information to dataframe
+    gb_airspaces = get_gb_airspaces()
+    flight_data_with_ef = find_airspace_of_flight_segment(flight_data_with_ef, gb_airspaces)
+    print("Added airspace information to flight data.")
+
+    # Save the flight data with energy forcing to parquet
+    flight_data_with_ef.write_parquet(file=parquet_file_with_ef, mkdir=True)
+
+    # Add energy forcing information to the flight information database
+    add_energy_forcing_to_flight_info_database(flight_data_with_ef, flight_info_with_ef_file_path)
 
 
 if __name__ == "__main__":
-    parquet_file_with_ef = "2024_01_01_sample_processed_with_interpolation_with_ef"
-    output_file_name = "2024_01_01_sample_processed_with_interpolation_energy_forcing_summary"
-    flight_dataframe_path = (
-        "data/contrails_model_data/2024_01_01_sample_processed_with_interpolation.parquet"
-    )
-    calculate_energy_forcing_for_flights(
-        parquet_file_with_ef,
-        output_file_name,
-        flight_dataframe_path=flight_dataframe_path,
-    )
+    FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_processed_flights")
+    SAVE_FLIGHTS_WITH_EF_DIR = Path("/home/as3091/ads_b_flights_with_ef")
+    SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("/home/as3091/ads_b_flight_info_with_ef")
+
+    if not SAVE_FLIGHTS_WITH_EF_DIR.exists():
+        SAVE_FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+    if not SAVE_FLIGHTS_INFO_WITH_EF_DIR.exists():
+        SAVE_FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+
+    parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("UK_flights_day_00*.parquet"))
+    print("found files in directory", len(parquet_file_paths))
+
+    for file_path in parquet_file_paths:
+        output_file_name = str(file_path.stem + "_with_ef")
+
+        calculate_energy_forcing_for_flights(
+            flight_dataframe_path=str(file_path),
+            parquet_file_with_ef=str(SAVE_FLIGHTS_WITH_EF_DIR / f"{output_file_name}.parquet"),
+            flight_info_with_ef_file_path=str(
+                SAVE_FLIGHTS_INFO_WITH_EF_DIR / f"{output_file_name}_flight_info.parquet"
+            ),
+        )
+        print(output_file_name)
