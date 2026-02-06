@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import logging
 from pathlib import Path
 
 import polars as pl
@@ -14,6 +15,9 @@ from aia_model_contrail_avoidance.core_model.environment import (
     create_grid_environment,
     run_flight_data_through_environment,
 )
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT = False
 
@@ -63,7 +67,7 @@ def calculate_energy_forcing_for_flights(
     # Load the processed flight data from parquet file
     flight_dataframe = pl.read_parquet(flight_dataframe_path)
 
-    print("Loading environment data...")
+    logger.info("Loading environment data")
     environment = create_grid_environment("cocip_grid_global_week_1_2024")
 
     if BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT:
@@ -81,13 +85,13 @@ def calculate_energy_forcing_for_flights(
             & (pl.col("longitude") >= environmental_bounds["lon_min"])
             & (pl.col("longitude") <= environmental_bounds["lon_max"])
         )
-    print("\nRunning flight data through environment...")
+    logger.info("Running flight data through environment")
     flight_data_with_ef = run_flight_data_through_environment(flight_dataframe, environment)
-    print(f"Processed {len(flight_data_with_ef)} data points")
+    logger.info("Processed %s data points", len(flight_data_with_ef))
 
     # adding airspace information to dataframe
     flight_data_with_ef = find_uk_airspace_of_flight_segment(flight_data_with_ef)
-    print("Added airspace information to flight data.")
+    logger.info("Added airspace information to flight data.")
 
     # Save the flight data with energy forcing to parquet
     flight_data_with_ef.write_parquet(file=parquet_file_with_ef, mkdir=True)
@@ -107,10 +111,11 @@ if __name__ == "__main__":
         SAVE_FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
 
     parquet_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("UK_flights_day_00*.parquet"))
-    print("found files in directory", len(parquet_file_paths))
+    logger.info("Found %s files in directory.", len(parquet_file_paths))
 
     for file_path in parquet_file_paths:
         output_file_name = str(file_path.stem + "_with_ef")
+        logger.info("Processing file: %s", output_file_name)
 
         calculate_energy_forcing_for_flights(
             flight_dataframe_path=str(file_path),
@@ -119,4 +124,3 @@ if __name__ == "__main__":
                 SAVE_FLIGHTS_INFO_WITH_EF_DIR / f"{file_path.stem}_flight_info.parquet"
             ),
         )
-        print(output_file_name)
