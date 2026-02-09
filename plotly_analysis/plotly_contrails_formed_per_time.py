@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import numpy as np
 import plotly.graph_objects as go  # type: ignore[import-untyped]
@@ -191,7 +192,10 @@ def plot_contrails_formed(
 
 
 if __name__ == "__main__":
-    plot_contrails_formed(
-        name_of_forcing_stats_file="energy_forcing_statistics",
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.info("Starting to plot contrails formed over time from JSON data.")
+    plot_contrails_formed_over_time_from_json(
+        name_of_forcing_stats_file="energy_forcing_statistics_week_1_2024",
         output_plot_name="contrails_formed",
     )
