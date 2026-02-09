@@ -49,6 +49,7 @@ class TemporalFlightSubset(enum.Enum):
 def process_ads_b_flight_data(
     parquet_file_path: str,
     path_to_save_file: str,
+    path_to_info_file: str,
     departure_and_arrival_subset: FlightDepartureAndArrivalSubset,
     temporal_subset: TemporalFlightSubset,
 ) -> None:
@@ -57,6 +58,7 @@ def process_ads_b_flight_data(
     Args:
         parquet_file_path: Path to the parquet file containing ADS-B flight data.
         path_to_save_file: Path to save the processed parquet file.
+        path_to_info_file: Path to save the flight info parquet file.
         departure_and_arrival_subset: Enum specifying the departure and arrival airport subset.
         temporal_subset: Enum specifying the temporal subset of the data.
     """
@@ -69,7 +71,7 @@ def process_ads_b_flight_data(
 
     process_ads_b_flight_data_for_environment(cleaned_dataframe, path_to_save_file)
 
-    flight_info_database_save_path = str(path_to_save_file).replace(
+    flight_info_database_save_path = str(path_to_info_file).replace(
         ".parquet", "_flight_info.parquet"
     )
 
