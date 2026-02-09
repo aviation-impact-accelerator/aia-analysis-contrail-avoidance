@@ -178,7 +178,7 @@ def processing_user_selction() -> dict[str, Any]:
     result = inquirer.prompt(questions)
     if result is None:
         return {"processing_steps": []}
-    return result
+    return result  # type: ignore[return-value]
 
 
 if __name__ == "__main__":
