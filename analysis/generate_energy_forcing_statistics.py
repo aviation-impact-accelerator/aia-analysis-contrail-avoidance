@@ -16,6 +16,9 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     _get_temporal_range_and_labels,
 )
 
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
+
 
 def create_histogram_distance_flown_over_time(
     temporal_granularity: TemporalGranularity, flight_dataframe: pl.DataFrame
@@ -343,9 +346,6 @@ def generate_energy_forcing_statistics(
 
 
 if __name__ == "__main__":
-    # logging
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-    logger = logging.getLogger(__name__)
     # read all flight data with energy forcing from a directory with parquet files and generate statistics
     SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
     parquet_file_paths = sorted(SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet"))
