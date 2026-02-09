@@ -57,7 +57,7 @@ def plot_contrails_formed_over_time_from_json(
 
 
 def plot_contrails_formed_over_time(
-    forcing_stats_data: dict,
+    forcing_stats_data: dict,  # type: ignore[type-arg]
     output_plot_name: str,
     temporal_granularity: TemporalGranularity,
 ) -> None:
