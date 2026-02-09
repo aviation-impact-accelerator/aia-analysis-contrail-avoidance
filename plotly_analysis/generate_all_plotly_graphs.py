@@ -46,11 +46,10 @@ def generate_all_plotly() -> None:
             temporal_granularity=temporal_granularity,
         )
 
-        plot_energy_forcing_histogram(
-            json_file="energy_forcing_statistics_week_1_2024",
-            output_file_histogram="energy_forcing_per_flight_histogram",
-            output_file_cumulative="energy_forcing_cumulative",
-        )
+    plot_energy_forcing_histogram(
+        energy_forcing_statistics=energy_forcing_statistics,
+        output_file_cumulative="energy_forcing_cumulative",
+    )
 
     plot_distance_flown_by_altitude_histogram(
         stats_file="2024_01_01_sample_stats_processed",
