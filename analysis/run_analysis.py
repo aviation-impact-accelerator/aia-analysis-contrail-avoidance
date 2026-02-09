@@ -24,7 +24,9 @@ from aia_model_contrail_avoidance.flight_data_processing import (
     TemporalFlightSubset,
     process_ads_b_flight_data,
 )
-from plotly_analysis.better_plotly_air_traffic_density import plot_air_traffic_density_map
+from plotly_analysis.better_plotly_air_traffic_density import (
+    plot_air_traffic_density_map,  # type: ignore[import-not-found]
+)
 from plotly_analysis.plotly_contrails_formed_per_time import plot_contrails_formed
 from plotly_analysis.plotly_distance_flown_by_altitude_histogram import (
     plot_distance_flown_by_altitude_histogram,
