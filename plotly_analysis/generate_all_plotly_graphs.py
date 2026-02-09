@@ -10,20 +10,20 @@ from pathlib import Path
 # Add parent directory to path for imports when running as a script
 sys.path.insert(0, str(Path(__file__).parent))
 
-from better_plotly_air_traffic_density import (
-    plot_air_traffic_density_map,  # type: ignore[import-not-found]
+from better_plotly_air_traffic_density import (  # type: ignore[import-not-found]
+    plot_air_traffic_density_map,
 )
-from plotly_contrails_formed_per_time import (
-    plot_contrails_formed_over_time,  # type: ignore[import-not-found]
+from plotly_contrails_formed_per_time import (  # type: ignore[import-not-found]
+    plot_contrails_formed_over_time,
 )
-from plotly_distance_flown_by_altitude_histogram import (
-    plot_distance_flown_by_altitude_histogram,  # type: ignore[import-not-found]
+from plotly_distance_flown_by_altitude_histogram import (  # type: ignore[import-not-found]
+    plot_distance_flown_by_altitude_histogram,
 )
-from plotly_domestic_international_flights import (
-    plot_domestic_international_flights_pie_chart,  # type: ignore[import-not-found]
+from plotly_domestic_international_flights import (  # type: ignore[import-not-found]
+    plot_domestic_international_flights_pie_chart,
 )
-from plotly_energy_forcing_histogram import (
-    plot_energy_forcing_histogram,  # type: ignore[import-not-found]
+from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
+    plot_energy_forcing_histogram,
 )
 from plotly_uk_airspace import plot_airspace_polygons  # type: ignore[import-not-found]
 
