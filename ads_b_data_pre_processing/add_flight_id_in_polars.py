@@ -314,6 +314,9 @@ def seperate_flight_id_for_large_time_gaps(
         "After separating flight IDs for large time gaps, there are %d unique flights",
         len(flight_dataframe_with_flight_id["flight_id"].unique()),
     )
+    logger.debug("smallest flight_id: %d", flight_dataframe_with_flight_id["flight_id"].min())
+    logger.debug("largest flight_id: %d", flight_dataframe_with_flight_id["flight_id"].max())
+
     return flight_dataframe_with_flight_id.drop(
         "unique_flight_identifier", "first_flight_id", "time_gap_flight_increment"
     )
@@ -356,6 +359,10 @@ def assign_flight_id_to_unique_flights(
         next_flight_id = (
             previous_flight_info_dataframe.select(pl.col("flight_id").max()).item()
         ) + 1
+        logger.info(
+            "Continuing flight IDs from previous chunk, starting with flight_id %d",
+            next_flight_id,
+        )
         # create unique flight identifier in previous flight info dataframe
         continued_flights_dataframe, new_flights_dataframe_with_unique_flight_identifier = (
             segment_dataframe_into_new_and_continued_flights(
@@ -385,14 +392,18 @@ def assign_flight_id_to_unique_flights(
     ).with_columns(
         pl.struct(["icao_address", "unique_flight_identifier"]).rle_id().alias("first_flight_id")
     )
-    # add next_flight_id to first_flight_id to ensure unique flight IDs across flights
-    flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.with_columns(
-        (pl.col("first_flight_id") + next_flight_id).alias("first_flight_id")
-    )
 
     # if first_flight_id occurs only once, remove it to avoid erroneous metadata switches
     flight_dataframe_with_flight_id = remove_erroneous_single_point_flights(
         flight_dataframe_with_flight_id
+    )
+    # add next_flight_id to first_flight_id to ensure unique flight IDs across flights
+    flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.with_columns(
+        (pl.col("first_flight_id") + int(next_flight_id)).alias("first_flight_id")
+    )
+    logger.debug(
+        "After adding next_flight_id, largest first_flight_id: %d",
+        flight_dataframe_with_flight_id["first_flight_id"].max(),
     )
 
     # for each flight, check if there are any time gaps larger than the threshold, and increment flight_id accordingly
@@ -486,7 +497,7 @@ def identify_uk_flights(
 if __name__ == "__main__":
     logging.basicConfig(
         # logging options: DEBUG, INFO, WARNING, ERROR, CRITICAL
-        level=logging.WARNING,
+        level=logging.DEBUG,
         format="%(asctime)s | %(levelname)s | %(message)s",
         datefmt="%H:%M:%S",
     )
