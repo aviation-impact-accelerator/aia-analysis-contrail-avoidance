@@ -113,6 +113,8 @@ def create_histogram_cumulative_energy_forcing_flight(
         pl.col("ef").sum().alias("total_ef")
     )
     ef_values = flight_ef_summary["total_ef"].to_numpy().astype("float64")
+    # ensure they are all numbers and not NaN or inf
+    ef_values = ef_values[np.isfinite(ef_values)]
     hist_counts, bin_edges = np.histogram(ef_values, bins=50, density=False)
     cumulative_counts = hist_counts.cumsum()
     return {
@@ -168,6 +170,19 @@ def generate_energy_forcing_statistics(
         output_filename: Optional path to save the statistics as JSON. If None, no file is written.
 
     """
+    # -- Data Quality Checks ---
+    # Check for missing values in critical columns
+    critical_columns = ["flight_id", "timestamp", "distance_flown_in_segment", "ef"]
+    missing_values_report = {
+        column: int(complete_flight_dataframe[column].is_null().sum())
+        for column in critical_columns
+    }
+    logger.info("Missing Values Report: %s", missing_values_report)
+
+    # remove not a number values from distance_flown_in_segment and ef columns
+    complete_flight_dataframe = complete_flight_dataframe.filter(
+        pl.col("distance_flown_in_segment").is_finite() & pl.col("ef").is_finite()
+    )
     # --- General Statistics ---
     total_number_of_datapoints = len(complete_flight_dataframe)
     total_number_of_flights = complete_flight_dataframe["flight_id"].n_unique()
@@ -180,6 +195,12 @@ def generate_energy_forcing_statistics(
 
     international_airspace_flights_dataframe = complete_flight_dataframe.filter(
         pl.col("airspace").is_null()
+    )
+    # change datapoints in airspace as "international"
+    international_airspace_flights_dataframe = (
+        international_airspace_flights_dataframe.with_columns(
+            pl.lit("international").alias("airspace")
+        )
     )
 
     total_energy_forcing_in_uk_airspace = uk_airspace_flights_dataframe["ef"].sum()
@@ -200,7 +221,7 @@ def generate_energy_forcing_statistics(
     # --- Contrail Formation Analysis ---
 
     contrail_forming_flight_segments_dataframe = complete_flight_dataframe.filter(
-        pl.col("ef") > 0
+        pl.col("ef") > 0.0
     )  # Segments with positive energy forcing form contrails
 
     total_distance_forming_contrails = contrail_forming_flight_segments_dataframe[
@@ -208,7 +229,7 @@ def generate_energy_forcing_statistics(
     ].sum()
     percentage_distance_forming_contrails = (
         (total_distance_forming_contrails / total_distance_flown) * 100
-        if total_distance_flown > 0
+        if total_distance_flown > 0.0
         else 0
     )
 
