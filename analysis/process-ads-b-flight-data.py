@@ -56,7 +56,7 @@ if __name__ == "__main__":
         parquet_file_path = str(input_file)
         save_filename = input_file.stem
         full_save_path = PROCESSED_FLIGHTS_WITH_IDS_DIR / f"{save_filename}.parquet"
-        info_save_path = PROCESSED_FLIGHTS_INFO_DIR / f"{save_filename}_info.parquet"
+        info_save_path = PROCESSED_FLIGHTS_INFO_DIR / f"{save_filename}.parquet"
 
         process_ads_b_flight_data(
             parquet_file_path,
