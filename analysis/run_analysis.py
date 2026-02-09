@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import logging
 import sys
 import time
@@ -18,7 +19,10 @@ from calculate_energy_forcing import (
 )
 from generate_energy_forcing_statistics import generate_energy_forcing_statistics
 
-from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
+from aia_model_contrail_avoidance.core_model.dimensions import (
+    SpatialGranularity,
+    TemporalGranularity,
+)
 from aia_model_contrail_avoidance.flight_data_processing import (
     FlightDepartureAndArrivalSubset,
     TemporalFlightSubset,
@@ -28,7 +32,7 @@ from plotly_analysis.better_plotly_air_traffic_density import (
     plot_air_traffic_density_map,
 )
 from plotly_analysis.plotly_contrails_formed_per_time import (
-    plot_contrails_formed,
+    plot_contrails_formed_over_time,
 )
 from plotly_analysis.plotly_distance_flown_by_altitude_histogram import (
     plot_distance_flown_by_altitude_histogram,
@@ -185,19 +189,42 @@ def run_generate_energy_forcing_statistics() -> None:
 
 def generate_all_plotly() -> None:
     """Generate all Plotly graphs."""
-    plot_contrails_formed(
-        name_of_forcing_stats_file=energy_forcing_statistics_json,
-        output_plot_name="contrails_formed",
+    """Generate all Plotly graphs."""
+    # read json file
+    file_name = "results/energy_forcing_statistics_week_1_2024.json"
+    with Path(file_name).open() as f:
+        energy_forcing_statistics = json.load(f)
+    logger.info("Loaded data from %s", file_name)
+
+    # temporal options available in the data
+    available_temporal_granularities = list(
+        energy_forcing_statistics.get("distance_forming_contrails_over_time_histogram", {}).keys()
     )
-    plot_distance_flown_by_altitude_histogram(
-        stats_file=energy_forcing_statistics_json,
-        output_file="distance_flown_by_altitude_histogram",
+    logger.info(
+        "Available temporal granularities in the data: %s", available_temporal_granularities
     )
+
+    # plot data that varies by temporal granularity
+
+    for temporal_granularity_key in available_temporal_granularities:
+        temporal_granularity = TemporalGranularity.from_histogram_key(temporal_granularity_key)
+        output_plot_name = f"contrails_formed_{temporal_granularity_key}"
+        plot_contrails_formed_over_time(
+            forcing_stats_data=energy_forcing_statistics,
+            output_plot_name=output_plot_name,
+            temporal_granularity=temporal_granularity,
+        )
+
     plot_energy_forcing_histogram(
-        json_file=energy_forcing_statistics_json,
-        output_file_histogram="energy_forcing_per_flight_histogram",
+        energy_forcing_statistics=energy_forcing_statistics,
         output_file_cumulative="energy_forcing_cumulative",
     )
+
+    plot_distance_flown_by_altitude_histogram(
+        stats_file="2024_01_01_sample_stats_processed",
+        output_file="distance_flown_by_altitude_histogram",
+    )
+
     plot_airspace_polygons(
         output_file="uk_airspace_map",
     )
@@ -210,7 +237,6 @@ def generate_all_plotly() -> None:
     }
 
     plot_air_traffic_density_map(
-        # Will Fix This!!!
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
         environmental_bounds=environmental_bounds,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
@@ -218,7 +244,7 @@ def generate_all_plotly() -> None:
     )
 
     plot_domestic_international_flights_pie_chart(
-        json_file=energy_forcing_statistics_json,
+        json_file="energy_forcing_statistics_week_1_2024",
         output_file="domestic_international_flights_pie_chart",
     )
 
