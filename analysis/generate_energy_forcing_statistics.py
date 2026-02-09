@@ -350,11 +350,11 @@ if __name__ == "__main__":
     SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
     parquet_file_paths = sorted(SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet"))
     # choose 7 days
-    complete_flight_dataframe = None
+    complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
     for parquet_file in parquet_file_paths[:7]:
         # read and append all dataframes together
         daily_dataframe = pl.read_parquet(parquet_file)
-        if complete_flight_dataframe is not None:
+        if complete_flight_dataframe.is_empty():
             complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
         else:
             complete_flight_dataframe = daily_dataframe
