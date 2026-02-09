@@ -29,6 +29,37 @@ class TemporalGranularity(Enum):
     SEASONALLY = "seasonally"
     ANNUALLY = "annually"
 
+    @staticmethod
+    def from_histogram_key(key: str) -> TemporalGranularity:
+        """Get the temporal granularity from the histogram key.
+
+        Args:
+            key: The key from the forcing stats data that indicates the temporal granularity.
+        Returns: The corresponding TemporalGranularity enum value.
+        """
+        if "hourly" in key:
+            return TemporalGranularity.HOURLY
+        if "daily" in key:
+            return TemporalGranularity.DAILY
+        if "monthly" in key:
+            return TemporalGranularity.MONTHLY
+        if "seasonally" in key:
+            return TemporalGranularity.SEASONALLY
+        if "annually" in key:
+            return TemporalGranularity.ANNUALLY
+        msg = f"Unknown temporal granularity in key: {key}"
+        raise ValueError(msg)
+
+    @staticmethod
+    def to_histogram_key(temporal_granularity: TemporalGranularity) -> str:
+        """Get the histogram key for the given temporal granularity.
+
+        Args:
+            temporal_granularity: The TemporalGranularity enum value to get the histogram key for.
+        Returns: The corresponding histogram key as a string.
+        """
+        return temporal_granularity.value
+
 
 def _get_temporal_grouping_field(temporal_granularity: TemporalGranularity) -> str:
     """Get the temporal grouping field based on granularity.

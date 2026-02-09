@@ -100,30 +100,58 @@ def create_histogram_distance_forming_contrails_over_time(
     return {str(unit): temporal_to_distance.get(unit, 0) for unit in temporal_range}
 
 
-def create_histogram_cumulative_energy_forcing_flight(
+def create_plot_cumulative_energy_forcing_flight(
     flight_dataframe: pl.DataFrame,
 ) -> dict[str, float]:
-    """Calculate cumulative energy forcing per flight histogram.
+    """Calculate cumulative energy forcing per flight plot.
 
     Args:
         flight_dataframe: DataFrame containing flight data.
 
     Returns:
-        Dictionary mapping temporal units to cumulative flight distance.
+        Dictionary mapping percentage of flights to cumulative energy forcing staring with most warming.
     """
     # Per-flight energy forcing statistics
     flight_ef_summary = flight_dataframe.group_by("flight_id").agg(
         pl.col("ef").sum().alias("total_ef")
     )
-    ef_values = flight_ef_summary["total_ef"].to_numpy().astype("float64")
-    # ensure they are all numbers and not NaN or inf
-    ef_values = ef_values[np.isfinite(ef_values)]
-    hist_counts, bin_edges = np.histogram(ef_values, bins=50, density=False)
-    cumulative_counts = hist_counts.cumsum()
+    number_of_flights = flight_ef_summary["flight_id"].n_unique()
+    total_energy_forcing = flight_ef_summary["total_ef"].sum()
+    # Sort flights by energy forcing in descending order
+    flight_ef_summary = flight_ef_summary.sort("total_ef", descending=True)
+    # Calculate cumulative energy forcing and corresponding percentage of flights
+    flight_ef_summary = flight_ef_summary.with_columns(
+        pl.col("total_ef").cum_sum().alias("cumulative_ef"),
+        (pl.arange(1, number_of_flights + 1) / number_of_flights * 100).alias(
+            "percentage_of_flights"
+        ),
+    )
+
+    cumulative_ef_percentage = (flight_ef_summary["cumulative_ef"] / total_energy_forcing) * 100
+    flight_ef_summary = flight_ef_summary.with_columns(
+        cumulative_ef_percentage.alias("cumulative_ef_percentage")
+    )
+    # Sample the cumulative energy forcing at each percentage_of_flights
+    flight_ef_summary = flight_ef_summary.select(
+        "percentage_of_flights", "cumulative_ef_percentage"
+    )
+    # for each percent from 1 0 to 100 find the cumulative energy forcing percentage at that point and return as a dictionary
+    percentage_of_flights = np.arange(1, 101)
+    cumulative_ef_percentage_at_percentage_of_flights = np.interp(
+        percentage_of_flights,
+        flight_ef_summary["percentage_of_flights"].to_numpy(),
+        flight_ef_summary["cumulative_ef_percentage"].to_numpy(),
+    )
+    histogram = dict(
+        zip(
+            percentage_of_flights.astype(int),
+            cumulative_ef_percentage_at_percentage_of_flights,
+            strict=False,
+        )
+    )
+
     return {
-        "bin_edges": bin_edges.tolist(),
-        "counts": hist_counts.tolist(),
-        "cumulative_counts": cumulative_counts.tolist(),
+        str(percent): histogram.get(percent, 0) for percent in percentage_of_flights.astype(int)
     }
 
 
@@ -244,7 +272,40 @@ def generate_energy_forcing_statistics(
     ) * 100
 
     # --- Energy Forcing Statistics ---
-    total_energy_forcing = contrail_forming_flight_segments_dataframe["ef"].sum()
+    total_energy_forcing = complete_flight_dataframe["ef"].sum()
+
+    # Per-flight energy forcing statistics
+    flight_ef_summary = complete_flight_dataframe.group_by("flight_id").agg(
+        pl.col("ef").sum().alias("total_ef")
+    )
+    number_of_flights = flight_ef_summary["flight_id"].n_unique()
+    total_energy_forcing = flight_ef_summary["total_ef"].sum()
+    # Sort flights by energy forcing in descending order
+    flight_ef_summary = flight_ef_summary.sort("total_ef", descending=True)
+    # Calculate cumulative energy forcing and corresponding percentage of flights
+    flight_ef_summary = flight_ef_summary.with_columns(
+        pl.col("total_ef").cum_sum().alias("cumulative_ef"),
+        (pl.arange(1, number_of_flights + 1)).alias("number_of_flights"),
+    )
+    top_20_percent_ef = total_energy_forcing * 0.2
+    top_50_percent_ef = total_energy_forcing * 0.5
+    top_80_percent_ef = total_energy_forcing * 0.8
+
+    number_of_flights_for_20_percent_ef = (
+        flight_ef_summary.filter(pl.col("cumulative_ef") >= top_20_percent_ef)
+        .select(pl.col("number_of_flights").min())
+        .item()
+    )
+    number_of_flights_for_50_percent_ef = (
+        flight_ef_summary.filter(pl.col("cumulative_ef") >= top_50_percent_ef)
+        .select(pl.col("number_of_flights").min())
+        .item()
+    )
+    number_of_flights_for_80_percent_ef = (
+        flight_ef_summary.filter(pl.col("cumulative_ef") >= top_80_percent_ef)
+        .select(pl.col("number_of_flights").min())
+        .item()
+    )
 
     # --- Build Summary ---
     stats = {
@@ -280,10 +341,11 @@ def generate_energy_forcing_statistics(
             "uk_airspace": float(total_energy_forcing_in_uk_airspace),
             "international_airspace": float(total_energy_forcing_in_international_airspace),
         },
-        "Cumulative_energy_forcing_per_flight": {
-            "histogram": create_histogram_cumulative_energy_forcing_flight(
-                complete_flight_dataframe
-            ),
+        "cumulative_energy_forcing_per_flight": {
+            "histogram": create_plot_cumulative_energy_forcing_flight(complete_flight_dataframe),
+            "number_of_flights_for_80_percent_ef": number_of_flights_for_80_percent_ef,
+            "number_of_flights_for_50_percent_ef": number_of_flights_for_50_percent_ef,
+            "number_of_flights_for_20_percent_ef": number_of_flights_for_20_percent_ef,
         },
         "distance_flown_over_time_histogram": {
             "hourly": create_histogram_distance_flown_over_time(
@@ -355,15 +417,19 @@ if __name__ == "__main__":
         # read and append all dataframes together
         daily_dataframe = pl.read_parquet(parquet_file)
         if complete_flight_dataframe.is_empty():
-            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
-        else:
             complete_flight_dataframe = daily_dataframe
+        else:
+            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
 
     output_filename = "energy_forcing_statistics_week_1_2024"
     logger.info(
         "Generating energy forcing statistics from %s to %s",
         complete_flight_dataframe["timestamp"].min(),
         complete_flight_dataframe["timestamp"].max(),
+    )
+    logger.info(
+        "Total number of flights in the dataframe: %d",
+        complete_flight_dataframe["flight_id"].n_unique(),
     )
 
     generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)

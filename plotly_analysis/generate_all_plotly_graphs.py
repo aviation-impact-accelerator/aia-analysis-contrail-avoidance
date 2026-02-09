@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
+import json
+import logging
+from pathlib import Path
 
 from .better_plotly_air_traffic_density import plot_air_traffic_density_map
 from .plotly_contrails_formed_per_time import plot_contrails_formed
@@ -12,21 +15,50 @@ from .plotly_energy_forcing_histogram import plot_energy_forcing_histogram
 from .plotly_uk_airspace import plot_airspace_polygons
 
 
+from aia_model_contrail_avoidance.core_model.dimensions import (
+    SpatialGranularity,
+    TemporalGranularity,
+)
+
+
+
 def generate_all_plotly() -> None:
     """Generate all Plotly graphs."""
-    plot_contrails_formed(
-        name_of_forcing_stats_file="energy_forcing_statistics",
-        output_plot_name="contrails_formed",
+    # read json file
+    file_name = "results/energy_forcing_statistics_week_1_2024.json"
+    with Path(file_name).open() as f:
+        energy_forcing_statistics = json.load(f)
+    logger.info("Loaded data from %s", file_name)
+
+    # temporal options available in the data
+    available_temporal_granularities = list(
+        energy_forcing_statistics.get("distance_forming_contrails_over_time_histogram", {}).keys()
     )
+    logger.info(
+        "Available temporal granularities in the data: %s", available_temporal_granularities
+    )
+
+    # plot data that varies by temporal granularity
+
+    for temporal_granularity_key in available_temporal_granularities:
+        temporal_granularity = TemporalGranularity.from_histogram_key(temporal_granularity_key)
+        output_plot_name = f"contrails_formed_{temporal_granularity_key}"
+        plot_contrails_formed_over_time(
+            forcing_stats_data=energy_forcing_statistics,
+            output_plot_name=output_plot_name,
+            temporal_granularity=temporal_granularity,
+        )
+
+    plot_energy_forcing_histogram(
+        energy_forcing_statistics=energy_forcing_statistics,
+        output_file_cumulative="energy_forcing_cumulative",
+    )
+
     plot_distance_flown_by_altitude_histogram(
         stats_file="2024_01_01_sample_stats_processed",
         output_file="distance_flown_by_altitude_histogram",
     )
-    plot_energy_forcing_histogram(
-        json_file="energy_forcing_statistics",
-        output_file_histogram="energy_forcing_per_flight_histogram",
-        output_file_cumulative="energy_forcing_cumulative",
-    )
+
     plot_airspace_polygons(
         output_file="uk_airspace_map",
     )
@@ -46,10 +78,14 @@ def generate_all_plotly() -> None:
     )
 
     plot_domestic_international_flights_pie_chart(
-        json_file="2024_01_01_sample_stats_processed",
+        json_file="energy_forcing_statistics_week_1_2024",
         output_file="domestic_international_flights_pie_chart",
     )
 
 
 if __name__ == "__main__":
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger(__name__)
+    logger.info("Generating all Plotly graphs.")
     generate_all_plotly()
+    logger.info("Finished generating all Plotly graphs.")
