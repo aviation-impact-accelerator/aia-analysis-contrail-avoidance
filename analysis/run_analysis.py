@@ -6,7 +6,7 @@ import logging
 import sys
 import time
 from pathlib import Path
-from typing import Any
+from typing import Any, cast
 
 import inquirer  # type: ignore[import-untyped]
 import polars as pl
@@ -178,7 +178,7 @@ def processing_user_selction() -> dict[str, Any]:
     result = inquirer.prompt(questions)
     if result is None:
         return {"processing_steps": []}
-    return result  # type: ignore[return-value]
+    return cast(dict[str, Any], result)
 
 
 if __name__ == "__main__":
