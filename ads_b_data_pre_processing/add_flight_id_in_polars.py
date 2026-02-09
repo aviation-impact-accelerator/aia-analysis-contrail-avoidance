@@ -23,10 +23,10 @@ logger = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 # Input: flight daraframe parquet files for the week without flight IDs
-FLIGHT_DATAFRAME_DIR = Path("/home/as3091/ads_b")
+FLIGHT_DATAFRAME_DIR = Path("~/ads_b").expanduser()
 
 # Output: clean flights with flight IDs
-FLIGHTS_WITH_IDS_DIR = Path("/home/as3091/ads_b_with_flight_ids")
+FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_with_flight_ids").expanduser()
 
 
 # TAKEN FROM PETERS CODE AND KEPT FOR REFERENCE
@@ -39,7 +39,7 @@ class FlightSegmentationConfig:
     # Long ground gap between flights
     long_ground_gap_minutes: float = 50.0
     # Hard "always new flight" gap (currently used)
-    hard_gap_milliseconds: float = 6 * 60 * 60 * 1000.0  # 6 hours
+    hard_gap_hours: float = 6.0
     # Big spatial jump threshold (km)
     max_jump_km: float = 500.0
     # "Same heading" threshold (deg) for in-air continuity
@@ -61,6 +61,11 @@ def filter_and_fill_origin_destination_pair(
     flight_dataframe_filtered = flight_dataframe.filter(
         pl.col("departure_airport_icao").is_not_null().over("icao_address")
         & pl.col("arrival_airport_icao").is_not_null().over("icao_address")
+    )
+
+    logger.debug(
+        "After filtering out rows with missing origin and destination airports, there are %d unique aircraft",
+        len(flight_dataframe_filtered["icao_address"].unique()),
     )
 
     # fill forward and backward the missing departure and arrival airports within each icao_address group
@@ -175,23 +180,36 @@ def remove_erroneous_single_point_flights(
     )
     # get flight IDs that occur less than the minimum number of consecutive datapoints threshold
     min_number_of_consecutive_datapoints = 3
-    unique_flights_with_low_counts = (
+    unique_flights_with_high_counts = (
         flight_dataframe_with_flight_id.group_by("first_flight_id")
         .agg(pl.len().alias("count"))
-        .filter(pl.col("count") < min_number_of_consecutive_datapoints)
+        .filter(pl.col("count") > min_number_of_consecutive_datapoints)
         .select("first_flight_id")
         .to_series()
         .to_list()
     )
+    logger.debug(
+        "number of unique flights before removing erroneous single-point flights: %d",
+        len(flight_dataframe_with_flight_id["first_flight_id"].unique()),
+    )
     # remove timestamps with these flight IDs
     flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.filter(
-        ~pl.col("first_flight_id").is_in(unique_flights_with_low_counts)
+        pl.col("first_flight_id").is_in(unique_flights_with_high_counts)
+    )
+    logger.debug(
+        "number of unique flights after removing erroneous single-point flights: %d",
+        len(flight_dataframe_with_flight_id["first_flight_id"].unique()),
     )
 
     # refactor first_flight_id to be consecutive after removing single-point flights
-    return flight_dataframe_with_flight_id.with_columns(
-        pl.struct(["icao_address", "unique_flight_identifier"]).rle_id().alias("first_flight_id")
+    flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.with_columns(
+        pl.struct(["unique_flight_identifier"]).rle_id().alias("first_flight_id")
     )
+    logger.debug(
+        "After removing erroneous flights, there are %d unique flights",
+        len(flight_dataframe_with_flight_id["first_flight_id"].unique()),
+    )
+    return flight_dataframe_with_flight_id
 
 
 def segment_dataframe_into_new_and_continued_flights(
@@ -270,14 +288,14 @@ def seperate_flight_id_for_large_time_gaps(
     """
     # order by icao_address and timestamp
     flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.sort(
-        ["first_flight_id", "timestamp"]
+        ["icao_address", "timestamp"]
     )
     # for each flight, check if there are any time gaps larger than the threshold
     # gt() returns boolean series where True indicates a gap larger than threshold
     flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.with_columns(
         pl.col("timestamp")
         .diff()
-        .gt(config.hard_gap_milliseconds)
+        .gt(config.hard_gap_hours * pl.duration(hours=1))
         .over("first_flight_id")
         .alias("time_gap_flight_increment")
     )
@@ -291,6 +309,10 @@ def seperate_flight_id_for_large_time_gaps(
             pl.col("first_flight_id").cast(pl.Int32)
             + pl.col("time_gap_flight_increment").cast(pl.Int32)
         ).alias("flight_id")
+    )
+    logger.debug(
+        "After separating flight IDs for large time gaps, there are %d unique flights",
+        len(flight_dataframe_with_flight_id["flight_id"].unique()),
     )
     return flight_dataframe_with_flight_id.drop(
         "unique_flight_identifier", "first_flight_id", "time_gap_flight_increment"
@@ -358,12 +380,10 @@ def assign_flight_id_to_unique_flights(
         )
 
     # assign flight_id based on unique icao_addresses, O-D pairs
-    flight_dataframe_with_flight_id = (
-        new_flights_dataframe_with_unique_flight_identifier.with_columns(
-            pl.struct(["icao_address", "unique_flight_identifier"])
-            .rle_id()
-            .alias("first_flight_id")
-        )
+    flight_dataframe_with_flight_id = new_flights_dataframe_with_unique_flight_identifier.sort(
+        ["icao_address", "timestamp"]
+    ).with_columns(
+        pl.struct(["icao_address", "unique_flight_identifier"]).rle_id().alias("first_flight_id")
     )
     # add next_flight_id to first_flight_id to ensure unique flight IDs across flights
     flight_dataframe_with_flight_id = flight_dataframe_with_flight_id.with_columns(
@@ -465,12 +485,11 @@ def identify_uk_flights(
 
 if __name__ == "__main__":
     logging.basicConfig(
-        level=logging.INFO,
+        # logging options: DEBUG, INFO, WARNING, ERROR, CRITICAL
+        level=logging.WARNING,
         format="%(asctime)s | %(levelname)s | %(message)s",
         datefmt="%H:%M:%S",
     )
-
-    logger.info("Running flight identification on all files")
 
     input_files = sorted(FLIGHT_DATAFRAME_DIR.glob("*.parquet"))
     output_dir = FLIGHTS_WITH_IDS_DIR
