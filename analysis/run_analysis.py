@@ -25,17 +25,23 @@ from aia_model_contrail_avoidance.flight_data_processing import (
     process_ads_b_flight_data,
 )
 from plotly_analysis.better_plotly_air_traffic_density import (
-    plot_air_traffic_density_map,  # type: ignore[import-not-found]
+    plot_air_traffic_density_map,
 )
-from plotly_analysis.plotly_contrails_formed_per_time import plot_contrails_formed
+from plotly_analysis.plotly_contrails_formed_per_time import (
+    plot_contrails_formed,
+)
 from plotly_analysis.plotly_distance_flown_by_altitude_histogram import (
     plot_distance_flown_by_altitude_histogram,
 )
 from plotly_analysis.plotly_domestic_international_flights import (
     plot_domestic_international_flights_pie_chart,
 )
-from plotly_analysis.plotly_energy_forcing_histogram import plot_energy_forcing_histogram
-from plotly_analysis.plotly_uk_airspace import plot_airspace_polygons
+from plotly_analysis.plotly_energy_forcing_histogram import (
+    plot_energy_forcing_histogram,
+)
+from plotly_analysis.plotly_uk_airspace import (
+    plot_airspace_polygons,
+)
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")

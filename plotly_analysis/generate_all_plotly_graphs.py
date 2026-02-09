@@ -1,15 +1,15 @@
-"""This module generates all Plotly graphs in one run."""  # noqa: INP001
+"""This module generates all Plotly graphs in one run."""
 
 from __future__ import annotations
 
-from better_plotly_air_traffic_density import plot_air_traffic_density_map
-from plotly_contrails_formed_per_time import plot_contrails_formed
-from plotly_distance_flown_by_altitude_histogram import plot_distance_flown_by_altitude_histogram
-from plotly_domestic_international_flights import plot_domestic_international_flights_pie_chart
-from plotly_energy_forcing_histogram import plot_energy_forcing_histogram
-from plotly_uk_airspace import plot_airspace_polygons
-
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
+
+from .better_plotly_air_traffic_density import plot_air_traffic_density_map
+from .plotly_contrails_formed_per_time import plot_contrails_formed
+from .plotly_distance_flown_by_altitude_histogram import plot_distance_flown_by_altitude_histogram
+from .plotly_domestic_international_flights import plot_domestic_international_flights_pie_chart
+from .plotly_energy_forcing_histogram import plot_energy_forcing_histogram
+from .plotly_uk_airspace import plot_airspace_polygons
 
 
 def generate_all_plotly() -> None:

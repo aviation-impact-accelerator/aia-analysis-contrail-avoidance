@@ -1,4 +1,4 @@
-from __future__ import annotations  # noqa: D100, INP001
+from __future__ import annotations  # noqa: D100
 
 from pathlib import Path
 
