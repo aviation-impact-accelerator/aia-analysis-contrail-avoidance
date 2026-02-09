@@ -40,6 +40,13 @@ def create_histogram_distance_flown_over_time(
         .agg(pl.col("distance_flown_in_segment").sum())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe["timestamp"].dt.date().n_unique()
+        distance_per_temporal["distance_flown_in_segment"] = [
+            distance / number_of_days
+            for distance in distance_per_temporal["distance_flown_in_segment"]
+        ]
     temporal_to_distance = dict(
         zip(
             distance_per_temporal["temporal_unit"],
@@ -73,6 +80,13 @@ def create_histogram_distance_forming_contrails_over_time(
         .agg(pl.col("distance_flown_in_segment").sum())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe_of_contrails["timestamp"].dt.date().n_unique()
+        distance_per_temporal["distance_flown_in_segment"] = [
+            distance / number_of_days
+            for distance in distance_per_temporal["distance_flown_in_segment"]
+        ]
     temporal_to_distance = dict(
         zip(
             distance_per_temporal["temporal_unit"],
@@ -131,6 +145,12 @@ def create_histogram_air_traffic_density_over_time(
         .agg(pl.col("flight_id").n_unique())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe["timestamp"].dt.date().n_unique()
+        planes_per_temporal["flight_id"] = [
+            count / number_of_days for count in planes_per_temporal["flight_id"]
+        ]
     temporal_to_planes = dict(
         zip(planes_per_temporal["temporal_unit"], planes_per_temporal["flight_id"], strict=True)
     )
