@@ -6,8 +6,9 @@ import logging
 import sys
 import time
 from pathlib import Path
+from typing import Any
 
-import inquirer
+import inquirer  # type: ignore[import-untyped]
 import polars as pl
 from calculate_energy_forcing import (
     calculate_energy_forcing_for_flights,
@@ -160,7 +161,7 @@ def run_generate_energy_forcing_statistics() -> str:
     return output_filename
 
 
-def processing_user_selction() -> None:
+def processing_user_selction() -> dict[str, Any]:
     """Prompt user for analysis options."""
     questions = [
         inquirer.Checkbox(
@@ -174,7 +175,10 @@ def processing_user_selction() -> None:
             ],
         ),
     ]
-    return inquirer.prompt(questions)
+    result = inquirer.prompt(questions)
+    if result is None:
+        return {"processing_steps": []}
+    return result
 
 
 if __name__ == "__main__":
