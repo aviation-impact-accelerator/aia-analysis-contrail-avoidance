@@ -8,6 +8,9 @@ import time
 from pathlib import Path
 from typing import Any, cast
 
+# Add parent directory to path for imports
+sys.path.insert(0, str(Path(__file__).parent.parent))
+
 import inquirer  # type: ignore[import-untyped]
 import polars as pl
 from calculate_energy_forcing import (
@@ -15,11 +18,22 @@ from calculate_energy_forcing import (
 )
 from generate_energy_forcing_statistics import generate_energy_forcing_statistics
 
+from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
 from aia_model_contrail_avoidance.flight_data_processing import (
     FlightDepartureAndArrivalSubset,
     TemporalFlightSubset,
     process_ads_b_flight_data,
 )
+from plotly_analysis.better_plotly_air_traffic_density import plot_air_traffic_density_map
+from plotly_analysis.plotly_contrails_formed_per_time import plot_contrails_formed
+from plotly_analysis.plotly_distance_flown_by_altitude_histogram import (
+    plot_distance_flown_by_altitude_histogram,
+)
+from plotly_analysis.plotly_domestic_international_flights import (
+    plot_domestic_international_flights_pie_chart,
+)
+from plotly_analysis.plotly_energy_forcing_histogram import plot_energy_forcing_histogram
+from plotly_analysis.plotly_uk_airspace import plot_airspace_polygons
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
@@ -38,6 +52,8 @@ energy_forcing_file_paths = sorted(
     SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet")
 )
 SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("~/ads_b_processed_flights_info").expanduser()
+# energy forcing statistics output
+energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
 
 
 def make_analysis_directories() -> list[Path]:
@@ -131,7 +147,7 @@ def run_calculate_energy_forcing() -> None:
     logger.info("Energy forcing calculation completed in %.1f minutes.", round(length / 60, 1))
 
 
-def run_generate_energy_forcing_statistics() -> str:
+def run_generate_energy_forcing_statistics() -> None:
     """Generate energy forcing statistics from calculated energy forcing data."""
     start = time.time()
     # choose 7 days
@@ -144,21 +160,59 @@ def run_generate_energy_forcing_statistics() -> str:
         else:
             complete_flight_dataframe = daily_dataframe
 
-    output_filename = "energy_forcing_statistics_week_1_2024"
     logger.info(
         "Generating energy forcing statistics from %s to %s",
         complete_flight_dataframe["timestamp"].min(),
         complete_flight_dataframe["timestamp"].max(),
     )
 
-    generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)
+    generate_energy_forcing_statistics(complete_flight_dataframe, energy_forcing_statistics_json)
 
     end = time.time()
     length = end - start
     logger.info(
         "Energy forcing statistics generation completed in %.1f minutes.", round(length / 60, 1)
     )
-    return output_filename
+
+
+def generate_all_plotly() -> None:
+    """Generate all Plotly graphs."""
+    plot_contrails_formed(
+        name_of_forcing_stats_file=energy_forcing_statistics_json,
+        output_plot_name="contrails_formed",
+    )
+    plot_distance_flown_by_altitude_histogram(
+        stats_file=energy_forcing_statistics_json,
+        output_file="distance_flown_by_altitude_histogram",
+    )
+    plot_energy_forcing_histogram(
+        json_file=energy_forcing_statistics_json,
+        output_file_histogram="energy_forcing_per_flight_histogram",
+        output_file_cumulative="energy_forcing_cumulative",
+    )
+    plot_airspace_polygons(
+        output_file="uk_airspace_map",
+    )
+
+    environmental_bounds = {
+        "lat_min": 45.0,
+        "lat_max": 61.0,
+        "lon_min": -30.0,
+        "lon_max": 5.0,
+    }
+
+    plot_air_traffic_density_map(
+        # Will Fix This!!!
+        parquet_file_name="2024_01_01_sample_processed_with_interpolation",
+        environmental_bounds=environmental_bounds,
+        spatial_granularity=SpatialGranularity.ONE_DEGREE,
+        output_file="air_traffic_density_map_uk_airspace",
+    )
+
+    plot_domestic_international_flights_pie_chart(
+        json_file=energy_forcing_statistics_json,
+        output_file="domestic_international_flights_pie_chart",
+    )
 
 
 def processing_user_selction() -> dict[str, Any]:
@@ -172,13 +226,14 @@ def processing_user_selction() -> dict[str, Any]:
                 "ADS-B Processing",
                 "Calculate Energy Forcing",
                 "Generate Energy Forcing Statistics",
+                "Plots",
             ],
         ),
     ]
     result = inquirer.prompt(questions)
     if result is None:
         return {"processing_steps": []}
-    return cast(dict[str, Any], result)
+    return cast("dict[str, Any]", result)
 
 
 if __name__ == "__main__":
@@ -190,6 +245,7 @@ if __name__ == "__main__":
         run_process_ads_b_data()
         run_calculate_energy_forcing()
         run_generate_energy_forcing_statistics()
+        generate_all_plotly()
     elif "ADS-B Processing" in answers["processing steps"]:
         unprocessed_file_paths = make_analysis_directories()
         run_process_ads_b_data()
@@ -197,6 +253,8 @@ if __name__ == "__main__":
         run_calculate_energy_forcing()
     elif "Generate Energy Forcing Statistics" in answers["processing steps"]:
         run_generate_energy_forcing_statistics()
+    elif "Plots" in answers["processing steps"]:
+        generate_all_plotly()
     else:
         logger.info("No analysis steps selected. Exiting.")
         sys.exit(0)
