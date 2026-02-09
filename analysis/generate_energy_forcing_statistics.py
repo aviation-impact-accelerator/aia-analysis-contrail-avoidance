@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -295,14 +296,33 @@ def generate_energy_forcing_statistics(
 
     # --- Write Output ---
     if output_filename:
+        logger.info("Saving statistics to results/%s.json", output_filename)
         with Path("results/" + output_filename + ".json").open("w") as f:
             json.dump(stats, f, indent=4)
 
 
 if __name__ == "__main__":
-    parquet_file = "2024_01_01_sample_processed_with_interpolation_with_ef"
-    output_filename = "energy_forcing_statistics_sample_2024_01_01"
+    # logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logger = logging.getLogger(__name__)
+    # read all flight data with energy forcing from a directory with parquet files and generate statistics
+    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
+    parquet_file_paths = sorted(SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet"))
+    # choose 7 days
+    complete_flight_dataframe = None
+    for parquet_file in parquet_file_paths[:7]:
+        # read and append all dataframes together
+        daily_dataframe = pl.read_parquet(parquet_file)
+        if complete_flight_dataframe is not None:
+            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
+        else:
+            complete_flight_dataframe = daily_dataframe
 
-    complete_flight_dataframe = pl.read_parquet(f"data/contrails_model_data/{parquet_file}.parquet")
+    output_filename = "energy_forcing_statistics_week_1_2024"
+    logger.info(
+        "Generating energy forcing statistics from %s to %s",
+        complete_flight_dataframe["timestamp"].min(),
+        complete_flight_dataframe["timestamp"].max(),
+    )
 
     generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)
