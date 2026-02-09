@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 from pathlib import Path
 
 import numpy as np
@@ -39,6 +40,13 @@ def create_histogram_distance_flown_over_time(
         .agg(pl.col("distance_flown_in_segment").sum())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe["timestamp"].dt.date().n_unique()
+        distance_per_temporal["distance_flown_in_segment"] = [
+            distance / number_of_days
+            for distance in distance_per_temporal["distance_flown_in_segment"]
+        ]
     temporal_to_distance = dict(
         zip(
             distance_per_temporal["temporal_unit"],
@@ -72,6 +80,13 @@ def create_histogram_distance_forming_contrails_over_time(
         .agg(pl.col("distance_flown_in_segment").sum())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe_of_contrails["timestamp"].dt.date().n_unique()
+        distance_per_temporal["distance_flown_in_segment"] = [
+            distance / number_of_days
+            for distance in distance_per_temporal["distance_flown_in_segment"]
+        ]
     temporal_to_distance = dict(
         zip(
             distance_per_temporal["temporal_unit"],
@@ -98,6 +113,8 @@ def create_histogram_cumulative_energy_forcing_flight(
         pl.col("ef").sum().alias("total_ef")
     )
     ef_values = flight_ef_summary["total_ef"].to_numpy().astype("float64")
+    # ensure they are all numbers and not NaN or inf
+    ef_values = ef_values[np.isfinite(ef_values)]
     hist_counts, bin_edges = np.histogram(ef_values, bins=50, density=False)
     cumulative_counts = hist_counts.cumsum()
     return {
@@ -130,6 +147,12 @@ def create_histogram_air_traffic_density_over_time(
         .agg(pl.col("flight_id").n_unique())
         .to_dict(as_series=False)
     )
+    # if hourly, divide by number of days in the dataframe to get average distance flown per hour across the week
+    if temporal_granularity == TemporalGranularity.HOURLY:
+        number_of_days = flight_dataframe["timestamp"].dt.date().n_unique()
+        planes_per_temporal["flight_id"] = [
+            count / number_of_days for count in planes_per_temporal["flight_id"]
+        ]
     temporal_to_planes = dict(
         zip(planes_per_temporal["temporal_unit"], planes_per_temporal["flight_id"], strict=True)
     )
@@ -147,6 +170,19 @@ def generate_energy_forcing_statistics(
         output_filename: Optional path to save the statistics as JSON. If None, no file is written.
 
     """
+    # -- Data Quality Checks ---
+    # Check for missing values in critical columns
+    critical_columns = ["flight_id", "timestamp", "distance_flown_in_segment", "ef"]
+    missing_values_report = {
+        column: int(complete_flight_dataframe[column].is_null().sum())
+        for column in critical_columns
+    }
+    logger.info("Missing Values Report: %s", missing_values_report)
+
+    # remove not a number values from distance_flown_in_segment and ef columns
+    complete_flight_dataframe = complete_flight_dataframe.filter(
+        pl.col("distance_flown_in_segment").is_finite() & pl.col("ef").is_finite()
+    )
     # --- General Statistics ---
     total_number_of_datapoints = len(complete_flight_dataframe)
     total_number_of_flights = complete_flight_dataframe["flight_id"].n_unique()
@@ -159,6 +195,12 @@ def generate_energy_forcing_statistics(
 
     international_airspace_flights_dataframe = complete_flight_dataframe.filter(
         pl.col("airspace").is_null()
+    )
+    # change datapoints in airspace as "international"
+    international_airspace_flights_dataframe = (
+        international_airspace_flights_dataframe.with_columns(
+            pl.lit("international").alias("airspace")
+        )
     )
 
     total_energy_forcing_in_uk_airspace = uk_airspace_flights_dataframe["ef"].sum()
@@ -179,7 +221,7 @@ def generate_energy_forcing_statistics(
     # --- Contrail Formation Analysis ---
 
     contrail_forming_flight_segments_dataframe = complete_flight_dataframe.filter(
-        pl.col("ef") > 0
+        pl.col("ef") > 0.0
     )  # Segments with positive energy forcing form contrails
 
     total_distance_forming_contrails = contrail_forming_flight_segments_dataframe[
@@ -187,7 +229,7 @@ def generate_energy_forcing_statistics(
     ].sum()
     percentage_distance_forming_contrails = (
         (total_distance_forming_contrails / total_distance_flown) * 100
-        if total_distance_flown > 0
+        if total_distance_flown > 0.0
         else 0
     )
 
@@ -295,14 +337,33 @@ def generate_energy_forcing_statistics(
 
     # --- Write Output ---
     if output_filename:
+        logger.info("Saving statistics to results/%s.json", output_filename)
         with Path("results/" + output_filename + ".json").open("w") as f:
             json.dump(stats, f, indent=4)
 
 
 if __name__ == "__main__":
-    parquet_file = "2024_01_01_sample_processed_with_interpolation_with_ef"
-    output_filename = "energy_forcing_statistics_sample_2024_01_01"
+    # logging
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+    logger = logging.getLogger(__name__)
+    # read all flight data with energy forcing from a directory with parquet files and generate statistics
+    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
+    parquet_file_paths = sorted(SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet"))
+    # choose 7 days
+    complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
+    for parquet_file in parquet_file_paths[:7]:
+        # read and append all dataframes together
+        daily_dataframe = pl.read_parquet(parquet_file)
+        if complete_flight_dataframe.is_empty():
+            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
+        else:
+            complete_flight_dataframe = daily_dataframe
 
-    complete_flight_dataframe = pl.read_parquet(f"data/contrails_model_data/{parquet_file}.parquet")
+    output_filename = "energy_forcing_statistics_week_1_2024"
+    logger.info(
+        "Generating energy forcing statistics from %s to %s",
+        complete_flight_dataframe["timestamp"].min(),
+        complete_flight_dataframe["timestamp"].max(),
+    )
 
     generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)
