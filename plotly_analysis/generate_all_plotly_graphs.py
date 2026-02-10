@@ -49,6 +49,7 @@ def generate_all_plotly() -> None:
             output_plot_name=output_plot_name,
             temporal_granularity=temporal_granularity,
         )
+
     # plot data that does not vary by temporal granularity
 
     plot_energy_forcing_histogram(
@@ -65,16 +66,18 @@ def generate_all_plotly() -> None:
         output_file="uk_airspace_map",
     )
 
+    plot_domestic_international_flights_pie_chart(
+        json_file="energy_forcing_statistics_week_1_2024",
+        output_file="domestic_international_flights_pie_chart",
+    )
+
+    # plot data that requires the full dataframe (e.g. for spatial plotting)
+
     plot_air_traffic_density_map(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
         environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="air_traffic_density_map_uk_airspace",
-    )
-
-    plot_domestic_international_flights_pie_chart(
-        json_file="energy_forcing_statistics_week_1_2024",
-        output_file="domestic_international_flights_pie_chart",
     )
 
 
