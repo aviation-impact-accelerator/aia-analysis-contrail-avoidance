@@ -21,6 +21,37 @@ logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(
 logger = logging.getLogger(__name__)
 
 
+def create_histogram_distance_flown_by_flight_level(
+    complete_flights_dataframe: pl.DataFrame,
+) -> dict[str, float]:
+    """Calculate distance flown by altitude histogram.
+
+    Args:
+        complete_flights_dataframe: DataFrame containing flight data with energy forcing.
+            required columns: "distance_flown_in_segment", "flight_level"
+
+    Returns:
+        Dictionary mapping altitude ranges (in flight levels) to distance flown.
+    """
+    # Altitude bins are each 10 flight levels, from 0 to 450 (i.e. FL0-10, ..., FL440-450)
+    flight_level_bins = [(i, i + 10) for i in range(0, 450, 10)]
+    flight_level_bin_labels = [
+        f"FL{flight_level_bin[0]}-{flight_level_bin[1]}" for flight_level_bin in flight_level_bins
+    ]
+    complete_flights_dataframe = complete_flights_dataframe.with_columns(
+        pl.col("flight_level").cast(pl.Int64)
+    )
+    distance_flown_by_flight_level_histogram = {}
+    for (lower_bound, upper_bound), label in zip(
+        flight_level_bins, flight_level_bin_labels, strict=False
+    ):
+        distance_in_bin = complete_flights_dataframe.filter(
+            pl.col("flight_level").is_between(lower_bound, upper_bound, closed="left")
+        )["distance_flown_in_segment"].sum()
+        distance_flown_by_flight_level_histogram[label] = distance_in_bin
+    return distance_flown_by_flight_level_histogram
+
+
 def create_histogram_distance_flown_over_time(
     temporal_granularity: TemporalGranularity, flight_dataframe: pl.DataFrame
 ) -> dict[str, float]:
@@ -399,6 +430,9 @@ def generate_energy_forcing_statistics(
                 TemporalGranularity.ANNUALLY, complete_flight_dataframe
             ),
         },
+        "distance_flown_by_flight_level_histogram": create_histogram_distance_flown_by_flight_level(
+            complete_flight_dataframe
+        ),
     }
 
     # --- Write Output ---
