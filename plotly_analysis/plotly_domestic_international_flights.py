@@ -8,23 +8,37 @@ from pathlib import Path
 import plotly.express as px  # type: ignore[import-untyped]
 
 
-def plot_domestic_international_flights_pie_chart(
-    json_file: str | Path,
-    output_file: str | Path,
+def plot_domestic_international_flights_pie_chart_from_json(
+    json_file_path: Path,
+    output_file_name: str,
 ) -> None:
     """Plot histogram of energy forcing per flight with cumulative forcing analysis.
 
     Args:
-        json_file: Path to the JSON file containing energy forcing statistics
-        output_file: Path to save the output histogram plot image
+        json_file_path: Path to the JSON file containing energy forcing statistics
+        output_file_name: Name of the output file to save the plot (without extension)
     """
     # Load the JSON file
-    with Path(json_file).open("r") as f:
-        stats = json.load(f)
+    with Path(json_file_path).open("r") as f:
+        flight_statistics = json.load(f)
+    plot_domestic_international_flights_pie_chart(
+        flight_statistics=flight_statistics,
+        output_file_name=output_file_name,
+    )
 
-    flight_data = stats["flight_data"]
-    domestic_flights = flight_data["number_of_regional_flights"]
-    international_flights = flight_data["number_of_international_flights"]
+
+def plot_domestic_international_flights_pie_chart(
+    flight_statistics: dict,
+    output_file_name: str,
+) -> None:
+    """Plot pie chart of domestic vs international flights.
+
+    Args:
+        flight_statistics: Dictionary containing flight statistics
+        output_file_name: Name of the output file to save the plot (without extension)
+    """
+    domestic_flights = flight_statistics["number_of_flights"]["regional"]
+    international_flights = flight_statistics["number_of_flights"]["international"]
 
     fig = px.pie(
         names=["Domestic Flights", "International Flights"],
@@ -34,7 +48,7 @@ def plot_domestic_international_flights_pie_chart(
     )
 
     fig.write_html(
-        f"results/plots/{output_file}.html",
+        f"results/plots/{output_file_name}.html",
         config={"displaylogo": False},
         full_html=False,
         include_plotlyjs="cdn",
@@ -42,9 +56,9 @@ def plot_domestic_international_flights_pie_chart(
 
 
 if __name__ == "__main__":
-    input_json = "2024_01_01_sample_stats_processed"
-    output_file = "domestic_international_flights_pie_chart"
-    plot_domestic_international_flights_pie_chart(
-        input_json,
-        output_file,
+    input_json_path = Path("results/energy_forcing_statistics_week_1_2024.json")
+    output_file_name = "domestic_international_flights_pie_chart"
+    plot_domestic_international_flights_pie_chart_from_json(
+        input_json_path,
+        output_file_name,
     )
