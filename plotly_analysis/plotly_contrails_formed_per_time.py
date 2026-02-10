@@ -6,6 +6,7 @@ import json
 import logging
 
 import numpy as np
+from typing import Any
 import plotly.graph_objects as go  # type: ignore[import-untyped]
 from plotly.subplots import make_subplots  # type: ignore[import-untyped]
 
@@ -57,7 +58,7 @@ def plot_contrails_formed_over_time_from_json(
 
 
 def plot_contrails_formed_over_time(
-    forcing_stats_data: dict,  # type: ignore[type-arg]
+    forcing_stats_data: dict[str, Any],
     output_plot_name: str,
     temporal_granularity: TemporalGranularity,
 ) -> None:
