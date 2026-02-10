@@ -15,9 +15,6 @@ from plotly_contrails_formed_per_time import (  # type: ignore[import-not-found]
 from plotly_distance_flown_by_flight_level_histogram import (  # type: ignore[import-not-found]
     plot_distance_flown_by_flight_level_histogram,
 )
-from plotly_domestic_international_flights import (  # type: ignore[import-not-found]
-    plot_domestic_international_flights_pie_chart,
-)
 from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
     plot_energy_forcing_histogram,
 )
@@ -27,6 +24,9 @@ from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUND
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
+)
+from plotly_analysis.plotly_pie_chart_number_of_flights_by_type import (
+    plotly_pie_chart_number_of_flights_domestic_and_international,
 )
 
 
@@ -73,7 +73,7 @@ def generate_all_plotly() -> None:
         output_file="uk_airspace_map",
     )
 
-    plot_domestic_international_flights_pie_chart(
+    plotly_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=energy_forcing_statistics,
         output_file_name="domestic_international_flights_pie_chart",
     )
