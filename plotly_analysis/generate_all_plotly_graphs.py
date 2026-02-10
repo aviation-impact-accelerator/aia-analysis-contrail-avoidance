@@ -15,6 +15,7 @@ from plotly_domestic_international_flights import plot_domestic_international_fl
 from plotly_energy_forcing_histogram import plot_energy_forcing_histogram
 from plotly_uk_airspace import plot_airspace_polygons
 
+from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
@@ -47,6 +48,7 @@ def generate_all_plotly() -> None:
             output_plot_name=output_plot_name,
             temporal_granularity=temporal_granularity,
         )
+    # plot data that does not vary by temporal granularity
 
     plot_energy_forcing_histogram(
         energy_forcing_statistics=energy_forcing_statistics,
@@ -62,16 +64,9 @@ def generate_all_plotly() -> None:
         output_file="uk_airspace_map",
     )
 
-    environmental_bounds = {
-        "lat_min": 45.0,
-        "lat_max": 61.0,
-        "lon_min": -30.0,
-        "lon_max": 5.0,
-    }
-
     plot_air_traffic_density_map(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
-        environmental_bounds=environmental_bounds,
+        environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="air_traffic_density_map_uk_airspace",
     )
