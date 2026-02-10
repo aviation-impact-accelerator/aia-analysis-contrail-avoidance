@@ -34,8 +34,8 @@ center_lon = (WEST + EAST) / 2 - 5  # Shift west
 fig = go.Figure()
 
 
-def plot_air_traffic_density_map(  # noqa: C901, PLR0915
-    parquet_file_name: str,
+def plot_air_traffic_density_map(
+    parquet_file_path: Path,
     environmental_bounds: dict[str, float] | None = None,
     spatial_granularity: SpatialGranularity = SpatialGranularity.ONE_DEGREE,
     output_file: str = "air_traffic_density_map",
@@ -43,20 +43,14 @@ def plot_air_traffic_density_map(  # noqa: C901, PLR0915
     """Plot air traffic density as a heatmap matrix for each degree.
 
     Args:
-        parquet_file_name: Name of the parquet file containing flight data (without extension).
+        parquet_file_path: Path to the parquet file containing flight data.
         spatial_granularity: Spatial granularity for binning (default: ONE_DEGREE).
         environmental_bounds: Optional dict with lat_min, lat_max, lon_min, lon_max.
         output_file: Name of the output plot file (without extension).
 
     Raises:
-        FileNotFoundError: If the parquet file is not found.
         NotImplementedError: If the chosen spatial granularity is not supported.
     """
-    parquet_file_path = Path("data/contrails_model_data") / f"{parquet_file_name}.parquet"
-    if not parquet_file_path.exists():
-        msg = f"Parquet file not found: {parquet_file_path}"
-        raise FileNotFoundError(msg)
-
     flight_dataframe = pl.read_parquet(parquet_file_path)
 
     # Create spatial bins and compute air traffic density
@@ -189,8 +183,14 @@ def plot_air_traffic_density_map(  # noqa: C901, PLR0915
 
 
 if __name__ == "__main__":
+    # get first parquet file in ads_b_flights_with_ef folder
+    parquet_folder = Path("~/ads_b_flights_with_ef").expanduser()
+    print(f"Looking for parquet files in {parquet_folder}")
+    parquet_files = sorted(parquet_folder.glob("*.parquet"))
+    parquet_file_path = parquet_files[0]
+
     plot_air_traffic_density_map(
-        parquet_file_name="2024_01_01_sample_processed_with_interpolation",
+        parquet_file_path=parquet_file_path,
         environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="better_air_traffic_density_map_uk_airspace",
