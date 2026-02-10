@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import json
 import logging
-import sys
 from pathlib import Path
 
 from better_plotly_air_traffic_density import plot_air_traffic_density_map

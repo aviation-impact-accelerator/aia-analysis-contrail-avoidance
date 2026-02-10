@@ -1,4 +1,4 @@
-"""Generate a heatmap of air traffic density in UK airspace using Plotly."""  # noqa: INP001
+"""Generate a heatmap of air traffic density in UK airspace using Plotly."""
 
 from __future__ import annotations
 
