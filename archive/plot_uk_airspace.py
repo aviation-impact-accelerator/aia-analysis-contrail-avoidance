@@ -8,6 +8,8 @@ import cartopy.crs as ccrs  # type: ignore  # noqa: PGH003
 import cartopy.feature as cfeature  # type: ignore  # noqa: PGH003
 import matplotlib.pyplot as plt
 
+from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+
 if TYPE_CHECKING:
     from cartopy.mpl.geoaxes import GeoAxes  # type: ignore # noqa: PGH003
 
@@ -78,11 +80,4 @@ def plot_airspace(environmental_bounds: dict[str, float], filename: str) -> None
 
 
 if __name__ == "__main__":
-    # Define the constraints
-    environmental_bounds = {
-        "lat_min": 49.0,
-        "lat_max": 62.0,
-        "lon_min": -8.0,
-        "lon_max": 3.0,
-    }
-    plot_airspace(environmental_bounds, "uk_airspace_map")
+    plot_airspace(ENVIRONMENTAL_BOUNDS_UK_AIRSPACE, "uk_airspace_map")
