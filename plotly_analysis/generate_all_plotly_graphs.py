@@ -7,25 +7,14 @@ import logging
 import sys
 from pathlib import Path
 
-# Add parent directory to path for imports when running as a script
-sys.path.insert(0, str(Path(__file__).parent))
-
-from better_plotly_air_traffic_density import (  # type: ignore[import-not-found]
-    plot_air_traffic_density_map,
+from better_plotly_air_traffic_density import plot_air_traffic_density_map
+from plotly_contrails_formed_per_time import plot_contrails_formed_over_time
+from plotly_distance_flown_by_flight_level_histogram import (
+    plot_distance_flown_by_flight_level_histogram,
 )
-from plotly_contrails_formed_per_time import (  # type: ignore[import-not-found]
-    plot_contrails_formed_over_time,
-)
-from plotly_distance_flown_by_altitude_histogram import (  # type: ignore[import-not-found]
-    plot_distance_flown_by_altitude_histogram,
-)
-from plotly_domestic_international_flights import (  # type: ignore[import-not-found]
-    plot_domestic_international_flights_pie_chart,
-)
-from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
-    plot_energy_forcing_histogram,
-)
-from plotly_uk_airspace import plot_airspace_polygons  # type: ignore[import-not-found]
+from plotly_domestic_international_flights import plot_domestic_international_flights_pie_chart
+from plotly_energy_forcing_histogram import plot_energy_forcing_histogram
+from plotly_uk_airspace import plot_airspace_polygons
 
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
@@ -65,9 +54,9 @@ def generate_all_plotly() -> None:
         output_file_cumulative="energy_forcing_cumulative",
     )
 
-    plot_distance_flown_by_altitude_histogram(
-        stats_file="2024_01_01_sample_stats_processed",
-        output_file="distance_flown_by_altitude_histogram",
+    plot_distance_flown_by_flight_level_histogram(
+        flight_statistics=energy_forcing_statistics,
+        output_file="distance_flown_by_flight_level_histogram",
     )
 
     plot_airspace_polygons(
