@@ -8,6 +8,7 @@ from pathlib import Path
 import polars as pl
 
 from aia_model_contrail_avoidance.core_model.airspace import (
+    ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
     find_uk_airspace_of_flight_segment,
 )
 from aia_model_contrail_avoidance.core_model.environment import (
@@ -71,19 +72,12 @@ def calculate_energy_forcing_for_flights(
     environment = create_grid_environment("cocip_grid_global_week_1_2024")
 
     if BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT:
-        # environmental bounds for UK ADS-B January environment
-        environmental_bounds = {
-            "lat_min": 49.0,
-            "lat_max": 62.0,
-            "lon_min": -8.0,
-            "lon_max": 3.0,
-        }
         # Remove datapoints that are outside the environment (latitude and longitude bounds)
         flight_dataframe = flight_dataframe.filter(
-            (pl.col("latitude") >= environmental_bounds["lat_min"])
-            & (pl.col("latitude") <= environmental_bounds["lat_max"])
-            & (pl.col("longitude") >= environmental_bounds["lon_min"])
-            & (pl.col("longitude") <= environmental_bounds["lon_max"])
+            (pl.col("latitude") >= ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_min"])
+            & (pl.col("latitude") <= ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_max"])
+            & (pl.col("longitude") >= ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_min"])
+            & (pl.col("longitude") <= ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_max"])
         )
     logger.info("Running flight data through environment")
     flight_data_with_ef = run_flight_data_through_environment(flight_dataframe, environment)

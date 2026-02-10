@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
 
+from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
 from archive.plot_uk_airspace import generate_uk_airspace_geoaxes
 
@@ -93,12 +94,7 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
     elif spatial_granularity == SpatialGranularity.UK_AIRSPACE:
         # Use UK airspace bounds
         if environmental_bounds is None:
-            environmental_bounds = {
-                "lat_min": 49.0,
-                "lat_max": 62.0,
-                "lon_min": -8.0,
-                "lon_max": 3.0,
-            }
+            environmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 
         min_lat = int(environmental_bounds["lat_min"])
         max_lat = int(environmental_bounds["lat_max"])
@@ -164,15 +160,9 @@ def plot_air_traffic_density_matrix(  # noqa: PLR0915
 
 
 if __name__ == "__main__":
-    environmental_bounds = {
-        "lat_min": 49.0,
-        "lat_max": 62.0,
-        "lon_min": -8.0,
-        "lon_max": 3.0,
-    }
     plot_air_traffic_density_matrix(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
-        environmental_bounds=environmental_bounds,
+        environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_plot_name="air_traffic_density_map_uk_airspace",
     )
