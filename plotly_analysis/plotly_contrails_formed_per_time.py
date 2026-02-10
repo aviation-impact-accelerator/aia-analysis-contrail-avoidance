@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+from typing import Any
 
 import numpy as np
-from typing import Any
 import plotly.graph_objects as go  # type: ignore[import-untyped]
 from plotly.subplots import make_subplots  # type: ignore[import-untyped]
 
