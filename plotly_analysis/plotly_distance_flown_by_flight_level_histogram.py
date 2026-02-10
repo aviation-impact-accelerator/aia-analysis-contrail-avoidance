@@ -4,12 +4,13 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import plotly.express as px  # type: ignore[import-untyped]
 
 
 def plot_distance_flown_by_flight_level_histogram_from_json(
-    stats_file_path: Path = "results/energy_forcing_statistics_week_1_2024.json",
+    stats_file_path: Path,
     output_file: str = "distance_flown_by_flight_level_histogram",
 ) -> None:
     """Plot a histogram of distance flown by flight level from a JSON statistics file.
@@ -18,13 +19,13 @@ def plot_distance_flown_by_flight_level_histogram_from_json(
         stats_file_path: Path to the JSON statistics file.
         output_file: name with which to save the output file.
     """
-    with Path(stats_file_path).open() as f:
+    with stats_file_path.open() as f:
         flight_statistics = json.load(f)
         plot_distance_flown_by_flight_level_histogram(flight_statistics, output_file)
 
 
 def plot_distance_flown_by_flight_level_histogram(
-    flight_statistics: dict,
+    flight_statistics: dict[str, Any],
     output_file: str = "distance_flown_by_flight_level_histogram",
 ) -> None:
     """Plot a histogram of distance flown by flight level from statistics data.
@@ -87,6 +88,6 @@ def plot_distance_flown_by_flight_level_histogram(
 
 if __name__ == "__main__":
     plot_distance_flown_by_flight_level_histogram_from_json(
-        stats_file_path="results/energy_forcing_statistics_week_1_2024.json",
+        stats_file_path=Path("results/energy_forcing_statistics_week_1_2024.json"),
         output_file="distance_flown_by_flight_level_histogram",
     )
