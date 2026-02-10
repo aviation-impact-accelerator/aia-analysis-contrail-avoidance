@@ -48,10 +48,19 @@ def plot_pie_chart_distance_forming_contrails(
     fig = px.pie(
         names=["Distance Forming Contrails", "Distance Not Forming Contrails"],
         values=[distance_forming_contrails, distance_not_forming_contrails],
-        title="Distance Traveled: Forming vs Not Forming Contrails",
+        # break into two lines to avoid long title
+        title="Distance Traveled: <br> Forming vs Not Forming Contrails",
         color_discrete_sequence=["#6a9179", "#FF6F61"],
     )
-
+    fig.update_layout(
+        legend={"yanchor": "bottom", "y": -1.5, "xanchor": "center", "x": 0.5, "orientation": "h"},
+        title={
+            "x": 0.5,
+            "xanchor": "center",
+            # decrease text size of the title
+            "font": {"size": 13},
+        },
+    )
     fig.write_html(
         f"results/plots/{output_file_name}.html",
         config={"displaylogo": False},
@@ -79,8 +88,17 @@ def plot_pie_chart_number_of_flights_forming_contrails(
             number_of_flights_forming_contrails,
             number_of_flights - number_of_flights_forming_contrails,
         ],
-        title="Number of Flights Forming Contrails: Forming vs Not Forming Contrails",
+        title="Number of Flights Forming Contrails: <br> Forming vs Not Forming Contrails",
         color_discrete_sequence=["#6a9179", "#FF6F61"],
+    )
+    fig.update_layout(
+        legend={"yanchor": "bottom", "y": -1.5, "xanchor": "center", "x": 0.5, "orientation": "h"},
+        title={
+            "x": 0.5,
+            "xanchor": "center",
+            # decrease text size of the title
+            "font": {"size": 13},
+        },
     )
 
     fig.write_html(

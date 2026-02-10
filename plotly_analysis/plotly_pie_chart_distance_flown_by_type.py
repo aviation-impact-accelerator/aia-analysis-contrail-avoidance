@@ -46,8 +46,17 @@ def plot_pie_chart_distance_traveled_by_domestic_and_international_flights(
     fig = px.pie(
         names=["Domestic Flights", "International Flights"],
         values=[domestic_flights, international_flights],
-        title="Distance Traveled: Domestic vs International Flights",
+        title="Distance Traveled: <br> Domestic vs International Flights",
         color_discrete_sequence=["#6a9179", "#FF6F61"],
+    )
+    fig.update_layout(
+        legend={"yanchor": "bottom", "y": -1.5, "xanchor": "center", "x": 0.5, "orientation": "h"},
+        title={
+            "x": 0.5,
+            "xanchor": "center",
+            # decrease text size of the title
+            "font": {"size": 13},
+        },
     )
 
     fig.write_html(
