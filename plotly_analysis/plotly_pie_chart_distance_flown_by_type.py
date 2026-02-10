@@ -1,4 +1,4 @@
-"""Plot pie chart of total distance traveled for domestic vs international flights."""  # noqa : INP001
+"""Plot pie chart of total distance traveled for domestic vs international flights."""
 
 from __future__ import annotations
 

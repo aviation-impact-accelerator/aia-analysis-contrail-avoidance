@@ -1,4 +1,4 @@
-"""Plot pie chart of contrail formation as distance traveled and number of flights."""  # noqa: INP001
+"""Plot pie chart of contrail formation as distance traveled and number of flights."""
 
 from __future__ import annotations
 

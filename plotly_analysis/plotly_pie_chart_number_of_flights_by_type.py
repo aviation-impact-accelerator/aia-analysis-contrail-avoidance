@@ -1,4 +1,4 @@
-"""Plot pie chart of number of domestic vs international flights."""  # noqa: INP001
+"""Plot pie chart of number of domestic vs international flights."""
 
 from __future__ import annotations
 
