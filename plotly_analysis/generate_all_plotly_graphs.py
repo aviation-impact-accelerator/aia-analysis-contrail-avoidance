@@ -67,14 +67,18 @@ def generate_all_plotly() -> None:
     )
 
     plot_domestic_international_flights_pie_chart(
-        json_file="energy_forcing_statistics_week_1_2024",
-        output_file="domestic_international_flights_pie_chart",
+        flight_statistics=energy_forcing_statistics,
+        output_file_name="domestic_international_flights_pie_chart",
     )
 
     # plot data that requires the full dataframe (e.g. for spatial plotting)
+    # use first day of data as sample for plotting
+    flights_with_ef_dir = Path("~/ads_b_flights_with_ef").expanduser()
+    parquet_files = sorted(flights_with_ef_dir.glob("*.parquet"))
+    parquet_file_path = parquet_files[0]
 
     plot_air_traffic_density_map(
-        parquet_file_name="2024_01_01_sample_processed_with_interpolation",
+        parquet_file_path=parquet_file_path,
         environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="air_traffic_density_map_uk_airspace",
