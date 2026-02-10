@@ -9,7 +9,7 @@ from typing import Any
 import plotly.express as px  # type: ignore[import-untyped]
 
 
-def plotly_pie_chart_number_of_flights_by_type(
+def plot_pie_chart_number_of_flights_by_type(
     json_file_path: Path,
     output_file_name: str,
 ) -> None:
@@ -22,13 +22,13 @@ def plotly_pie_chart_number_of_flights_by_type(
     # Load the JSON file
     with Path(json_file_path).open("r") as f:
         flight_statistics = json.load(f)
-    plotly_pie_chart_number_of_flights_domestic_and_international(
+    plot_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=flight_statistics,
         output_file_name=output_file_name,
     )
 
 
-def plotly_pie_chart_number_of_flights_domestic_and_international(
+def plot_pie_chart_number_of_flights_domestic_and_international(
     flight_statistics: dict[str, Any],
     output_file_name: str,
 ) -> None:
@@ -68,7 +68,7 @@ def plotly_pie_chart_number_of_flights_domestic_and_international(
 if __name__ == "__main__":
     input_json_path = Path("results/energy_forcing_statistics_week_1_2024.json")
     output_file_name = "pie_chart_number_of_domestic_and_international_flights"
-    plotly_pie_chart_number_of_flights_by_type(
+    plot_pie_chart_number_of_flights_by_type(
         input_json_path,
         output_file_name,
     )
