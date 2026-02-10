@@ -1,4 +1,6 @@
-from __future__ import annotations  # noqa: D100, INP001
+"""Generate a heatmap of air traffic density in UK airspace using Plotly."""  # noqa: INP001
+
+from __future__ import annotations
 
 from pathlib import Path
 
@@ -8,6 +10,7 @@ import polars as pl
 from shapely.geometry import box
 
 from aia_model_contrail_avoidance.core_model.airspace import (
+    ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
     get_gb_airspaces,
 )
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
@@ -149,7 +152,7 @@ def plot_air_traffic_density_map(  # noqa: C901, PLR0915
 
     uk_airspaces = get_gb_airspaces()
 
-    for i, airspace in enumerate(uk_airspaces):  # noqa: B007
+    for _i, airspace in enumerate(uk_airspaces):
         # Get the exterior coordinates from the shapely geometry
         coords = np.array(airspace.shape.exterior.coords)
         lons = coords[:, 0]  # type: ignore [assignment]
@@ -186,15 +189,9 @@ def plot_air_traffic_density_map(  # noqa: C901, PLR0915
 
 
 if __name__ == "__main__":
-    environmental_bounds = {
-        "lat_min": 45.0,
-        "lat_max": 61.0,
-        "lon_min": -30.0,
-        "lon_max": 5.0,
-    }
     plot_air_traffic_density_map(
         parquet_file_name="2024_01_01_sample_processed_with_interpolation",
-        environmental_bounds=environmental_bounds,
+        environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
         spatial_granularity=SpatialGranularity.ONE_DEGREE,
         output_file="better_air_traffic_density_map_uk_airspace",
     )
