@@ -1,4 +1,4 @@
-"""Defines a function to plot contrails formed per temporal unit."""  # noqa: INP001
+"""Defines a function to plot contrails formed per temporal unit."""
 
 from __future__ import annotations
 

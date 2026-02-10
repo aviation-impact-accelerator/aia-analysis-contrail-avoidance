@@ -1,4 +1,6 @@
-from __future__ import annotations  # noqa: D100, INP001
+"""Plot UK airspace polygons on a map using Plotly."""
+
+from __future__ import annotations
 
 from typing import TYPE_CHECKING
 

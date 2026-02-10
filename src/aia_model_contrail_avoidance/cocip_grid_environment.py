@@ -2,14 +2,20 @@
 
 from __future__ import annotations
 
+from pathlib import Path
+
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import xarray as xr
 from pycontrails.core import MetDataset
 from pycontrails.datalib.ecmwf import ERA5
 from pycontrails.models.cocipgrid import CocipGrid
 from pycontrails.models.humidity_scaling import HistogramMatching
 from pycontrails.models.ps_model import PSGrid
+
+# Project root directory
+PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 def generate_cocip_grid_environment(
@@ -63,7 +69,8 @@ def generate_cocip_grid_environment(
     # Run CocipGrid model
     result = cocip_grid.eval(source=grid_source)
     # save dataset to netcdf
-    result.data.to_netcdf("data/energy_forcing_data/" + save_filename + ".nc")
+    output_path = PROJECT_ROOT / "data" / "energy_forcing_data" / f"{save_filename}.nc"
+    result.data.to_netcdf(str(output_path))
 
 
 def plot_cocip_grid_environment(
@@ -80,9 +87,10 @@ def plot_cocip_grid_environment(
         environment_filename: Filename of the saved CocipGrid environment dataset.
         save_filename: Filename to save the plot.
     """
-    grid: MetDataset = MetDataset.load("data/energy_forcing_data/" + environment_filename + ".nc")
+    file_path = PROJECT_ROOT / "data" / "energy_forcing_data" / f"{environment_filename}.nc"
+    grid_data = xr.open_dataset(str(file_path))
     plt.figure(figsize=(12, 8))
-    ef_per_m = grid.data["ef_per_m"].isel(
+    ef_per_m = grid_data["ef_per_m"].isel(
         time=selected_time_index, level=selected_flight_level_index
     )
     ef_per_m.plot(x="longitude", y="latitude", vmin=-1e8, vmax=1e8, cmap="coolwarm")  # type: ignore[call-arg]
@@ -92,6 +100,8 @@ def plot_cocip_grid_environment(
     plt.ylabel("Latitude")
 
     if save_filename:
-        plt.savefig("results/plots/" + save_filename + ".png")
+        output_path = PROJECT_ROOT / "results" / "plots" / f"{save_filename}.png"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(str(output_path))
     else:
         plt.show()

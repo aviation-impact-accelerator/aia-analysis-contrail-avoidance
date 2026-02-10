@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 import logging
+import time
 from pathlib import Path
 
 import numpy as np
@@ -15,6 +16,9 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     _get_temporal_grouping_field,
     _get_temporal_range_and_labels,
 )
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
+logger = logging.getLogger(__name__)
 
 
 def create_histogram_distance_flown_by_flight_level(
@@ -220,13 +224,13 @@ def create_histogram_air_traffic_density_over_time(
 
 def generate_energy_forcing_statistics(
     complete_flight_dataframe: pl.DataFrame,
-    output_filename: str | None = None,
+    output_filename: str,
 ) -> None:
     """Generate energy forcing summary statistics including contrail formation analysis.
 
     Args:
         complete_flight_dataframe: DataFrame containing flight data with energy forcing.
-        output_filename: Optional path to save the statistics as JSON. If None, no file is written.
+        output_filename: Path to save the statistics as JSON.
 
     """
     # -- Data Quality Checks ---
@@ -432,38 +436,62 @@ def generate_energy_forcing_statistics(
     }
 
     # --- Write Output ---
-    if output_filename:
-        logger.info("Saving statistics to results/%s.json", output_filename)
-        with Path("results/" + output_filename + ".json").open("w") as f:
-            json.dump(stats, f, indent=4)
+    logger.info("Saving statistics to results/%s.json", output_filename)
+    with Path("results/" + output_filename + ".json").open("w") as f:
+        json.dump(stats, f, indent=4)
 
 
-if __name__ == "__main__":
-    # logging
-    logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
-    logger = logging.getLogger(__name__)
-    # read all flight data with energy forcing from a directory with parquet files and generate statistics
-    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
-    parquet_file_paths = sorted(SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet"))
-    # choose 7 days
+def generate_energy_forcing_statistics_from_filepath(
+    energy_forcing_paraquet_files: list[Path],
+    output_filename_json: str,
+    first_day: int,
+    final_day: int,
+) -> None:
+    """Generate energy forcing statistics from calculated energy forcing data.
+
+    Args:
+        energy_forcing_paraquet_files: List of file paths to parquet files containing flight data
+          with energy forcing calculated.
+        output_filename_json: Name of the output JSON file to save the statistics,
+        (without extension).
+        first_day: The first day to include in the statistics.
+        final_day: The final day to include in the statistics.
+    """
+    start = time.time()
     complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
-    for parquet_file in parquet_file_paths[:7]:
+    logger.info("Found %s files in directory.", len(energy_forcing_paraquet_files))
+    logger.info("Generating Statistics from %s files.", final_day - first_day + 1)
+    for parquet_file in energy_forcing_paraquet_files[first_day - 1 : final_day]:
         # read and append all dataframes together
         daily_dataframe = pl.read_parquet(parquet_file)
         if complete_flight_dataframe.is_empty():
-            complete_flight_dataframe = daily_dataframe
-        else:
             complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
+        else:
+            complete_flight_dataframe = daily_dataframe
 
-    output_filename = "energy_forcing_statistics_week_1_2024"
     logger.info(
         "Generating energy forcing statistics from %s to %s",
         complete_flight_dataframe["timestamp"].min(),
         complete_flight_dataframe["timestamp"].max(),
     )
+
+    generate_energy_forcing_statistics(complete_flight_dataframe, output_filename_json)
+
+    end = time.time()
+    length = end - start
     logger.info(
-        "Total number of flights in the dataframe: %d",
-        complete_flight_dataframe["flight_id"].n_unique(),
+        "Energy forcing statistics generation completed in %.1f minutes.", round(length / 60, 1)
     )
 
-    generate_energy_forcing_statistics(complete_flight_dataframe, output_filename)
+
+if __name__ == "__main__":
+    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
+    energy_forcing_parquet_files = sorted(
+        SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet")
+    )
+    energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
+    first_day = 1
+    final_day = 7
+    generate_energy_forcing_statistics_from_filepath(
+        energy_forcing_parquet_files, energy_forcing_statistics_json, first_day, final_day
+    )
