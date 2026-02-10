@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from typing import Any
 
 import plotly.express as px  # type: ignore[import-untyped]
 
@@ -28,7 +29,7 @@ def plot_domestic_international_flights_pie_chart_from_json(
 
 
 def plot_domestic_international_flights_pie_chart(
-    flight_statistics: dict,
+    flight_statistics: dict[str, Any],
     output_file_name: str,
 ) -> None:
     """Plot pie chart of domestic vs international flights.
