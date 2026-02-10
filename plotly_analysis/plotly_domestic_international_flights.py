@@ -3,12 +3,9 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from pathlib import Path
 
 import plotly.express as px  # type: ignore[import-untyped]
-
-if TYPE_CHECKING:
-    from pathlib import Path
 
 
 def plot_domestic_international_flights_pie_chart(
@@ -22,7 +19,7 @@ def plot_domestic_international_flights_pie_chart(
         output_file: Path to save the output histogram plot image
     """
     # Load the JSON file
-    with open(f"results/{json_file}.json") as f:  # noqa: PTH123
+    with Path(json_file).open("r") as f:
         stats = json.load(f)
 
     flight_data = stats["flight_data"]
