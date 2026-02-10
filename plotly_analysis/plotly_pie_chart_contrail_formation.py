@@ -79,8 +79,10 @@ def plot_pie_chart_number_of_flights_forming_contrails(
         flight_statistics: Dictionary containing flight statistics
         output_file_name: Name of the output file to save the plot (without extension)
     """
-    number_of_flights = flight_statistics["number_of_flights"]["regional"]
-    number_of_flights_forming_contrails = flight_statistics["number_of_flights"]["international"]
+    number_of_flights = flight_statistics["number_of_flights"]["total"]
+    number_of_flights_forming_contrails = flight_statistics["contrail_formation"][
+        "flights_forming_contrails"
+    ]
 
     fig = px.pie(
         names=["Flights Forming Contrails", "Flights Not Forming Contrails"],
