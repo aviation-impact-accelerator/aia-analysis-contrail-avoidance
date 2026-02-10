@@ -6,6 +6,13 @@ import polars as pl
 import shapely
 from traffic.data import eurofirs
 
+ENVIRONMENTAL_BOUNDS_UK_AIRSPACE = {
+    "lat_min": 45.0,
+    "lat_max": 61.0,
+    "lon_min": -30.0,
+    "lon_max": 5.0,
+}
+
 
 def get_gb_airspaces() -> list:  # type: ignore[type-arg]
     """Retrieve airspace data for Great Britain FIRs."""
@@ -24,13 +31,27 @@ def find_uk_airspace_of_flight_segment(
     gb_airspaces = get_gb_airspaces()
     # remove datapoints outside of UK environment
     flight_dataframe_within_uk = flight_dataframe.filter(
-        pl.col("longitude").is_between(-8, 3) & pl.col("latitude").is_between(49, 62)
+        pl.col("longitude").is_between(
+            ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_min"], ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_max"]
+        )
+        & pl.col("latitude").is_between(
+            ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_min"], ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_max"]
+        )
     )
     # add airspace information to dataframe
     datapoints_within_uk = find_airspace_of_flight_segment(flight_dataframe_within_uk, gb_airspaces)
 
     flight_dataframe_outside_uk = flight_dataframe.filter(
-        ~(pl.col("longitude").is_between(-8, 3) & pl.col("latitude").is_between(49, 62))
+        ~(
+            pl.col("longitude").is_between(
+                ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_min"],
+                ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lon_max"],
+            )
+            & pl.col("latitude").is_between(
+                ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_min"],
+                ENVIRONMENTAL_BOUNDS_UK_AIRSPACE["lat_max"],
+            )
+        )
     )
     # add airspace column with None for datapoints outside of UK environment
     flight_dataframe_outside_uk = flight_dataframe_outside_uk.with_columns(
