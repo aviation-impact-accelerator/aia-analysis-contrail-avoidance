@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import polars as pl
-from generate_energy_forcing_statistics import generate_energy_forcing_statistics
+from generate_energy_forcing_statistics_from_filepath import (
+    generate_energy_forcing_statistics,
+)
 
 from aia_model_contrail_avoidance.policy import (
     ContrailAvoidancePolicy,
