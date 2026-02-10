@@ -25,6 +25,13 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
 )
+from plotly_analysis.plotly_pie_chart_contrail_formation import (
+    plotly_pie_chart_distance_forming_contrails,
+    plotly_pie_chart_number_of_flights_forming_contrails,
+)
+from plotly_analysis.plotly_pie_chart_distance_flown_by_type import (
+    plotly_pie_chart_distance_traveled_by_domestic_and_international_flights,
+)
 from plotly_analysis.plotly_pie_chart_number_of_flights_by_type import (
     plotly_pie_chart_number_of_flights_domestic_and_international,
 )
@@ -75,7 +82,19 @@ def generate_all_plotly() -> None:
 
     plotly_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=energy_forcing_statistics,
-        output_file_name="domestic_international_flights_pie_chart",
+        output_file_name="pie_chart_number_of_flights_domestic_and_international_flights",
+    )
+    plotly_pie_chart_distance_traveled_by_domestic_and_international_flights(
+        flight_statistics=energy_forcing_statistics,
+        output_file_name="pie_chart_distance_traveled_by_domestic_and_international_flights",
+    )
+    plotly_pie_chart_number_of_flights_forming_contrails(
+        flight_statistics=energy_forcing_statistics,
+        output_file_name="pie_chart_number_of_flights_forming_contrails",
+    )
+    plotly_pie_chart_distance_forming_contrails(
+        flight_statistics=energy_forcing_statistics,
+        output_file_name="pie_chart_distance_forming_contrails",
     )
 
     # plot data that requires the full dataframe (e.g. for spatial plotting)
