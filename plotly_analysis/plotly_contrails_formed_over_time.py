@@ -9,7 +9,7 @@ from pathlib import Path
 from aia_model_contrail_avoidance.core_model.dimensions import (
     TemporalGranularity,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_temporal_hisograms import (
+from aia_model_contrail_avoidance.visualisation.plotly_temporal_histograms import (
     plot_contrails_formed_over_time,
 )
 
