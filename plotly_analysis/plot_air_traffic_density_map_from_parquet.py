@@ -15,23 +15,24 @@ from aia_model_contrail_avoidance.visualisation.plot_spatial_maps import (
 
 def plot_air_traffic_density_map_from_parquet(
     parquet_file_path: Path,
-    output_file_name: str,
-    environmental_bounds: tuple[float, float, float, float],
+    output_file: str,
+    environmental_bounds: dict[str, float],
     spatial_granularity: SpatialGranularity,
 ) -> None:
     """Generate a heatmap of air traffic density in UK airspace using Plotly.
 
     Args:
-        parquet_file_path: Path to the Parquet file containing flight data with energy forcing
-        output_file_name: Name of the output file to save the plot (without extension)
-        environmental_bounds: Tuple of (min_latitude, max_latitude, min_longitude, max_longitude) defining the bounds of the map
-        spatial_granularity: SpatialGranularity defining the granularity of the heatmap
+        parquet_file_path: Path to the Parquet file containing flight data with energy forcing.
+        output_file: Name of the output file to save the plot (without extension).
+        environmental_bounds: Dictionary defining the bounds of the map with keys 'min_latitude',
+        'max_latitude', 'min_longitude', 'max_longitude'.
+        spatial_granularity: SpatialGranularity defining the granularity of the heatmap.
     """
     plot_air_traffic_density_map(
         parquet_file_path=parquet_file_path,
         environmental_bounds=environmental_bounds,
         spatial_granularity=spatial_granularity,
-        output_file=output_file_name,
+        output_file=output_file,
     )
 
 

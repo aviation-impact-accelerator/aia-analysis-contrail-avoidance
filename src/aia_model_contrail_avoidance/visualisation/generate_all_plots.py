@@ -38,7 +38,7 @@ logger = logging.getLogger(__name__)
 def generate_all_plots(
     json_file_name: str,
     flights_with_ef_dir: Path,
-    environmental_bounds: tuple,
+    environmental_bounds: dict[str, float],
     spatial_granularity: SpatialGranularity,
 ) -> None:
     """Generate all Plotly graphs."""
