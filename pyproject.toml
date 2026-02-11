@@ -3,8 +3,8 @@ name = "aia-model-contrail-avoidance"
 version = "0.1.0"
 description = "Engine for modelling navigational contrail avoidance"
 authors = [
-    { name = "Sam Brockie", email = "sgb39@cam.ac.uk" },
-    { name = "Jia Wei Kho", email = "jwk33@cam.ac.uk" },
+    { name = "Ana Stojanovic", email = "as3091@cam.ac.uk" },
+    { name = "Jesse Palmer", email = "jlp74@cam.ac.uk" },
 ]
 requires-python = ">=3.12"
 readme = "README.md"
@@ -58,6 +58,17 @@ mypy_path = "src"
 plugins = "camia_model.plugin.mypy"
 strict = true
 
+[[tool.mypy.overrides]]
+module = [
+    "inquirer",
+    "plotly",
+    "plotly.express",
+    "plotly.graph_objects",
+    "plotly.io",
+    "plotly.subplots",
+]
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 addopts = [
     "--doctest-modules",
@@ -78,7 +89,8 @@ docstring-code-format = true
 [tool.ruff.lint]
 select = ["ALL"]
 ignore = [
-    "ANN1",
+    "ANN101",
+    "ANN102",
     "COM812",
     "COM819",
     "D206",
@@ -90,10 +102,6 @@ ignore = [
     "ISC001",
     "ISC002",
     "T201",
-    "Q000",
-    "Q001",
-    "Q002",
-    "Q003",
     "W191",
 ]
 
