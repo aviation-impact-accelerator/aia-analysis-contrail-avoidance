@@ -18,16 +18,6 @@ from plotly_distance_flown_by_flight_level_histogram import (  # type: ignore[im
 from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
     plot_energy_forcing_histogram,
 )
-from plotly_pie_chart_contrail_formation import (  # type: ignore[import-not-found]
-    plot_pie_chart_distance_forming_contrails,
-    plot_pie_chart_number_of_flights_forming_contrails,
-)
-from plotly_pie_chart_distance_flown_by_type import (  # type: ignore[import-not-found]
-    plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
-)
-from plotly_pie_chart_number_of_flights_by_type import (  # type: ignore[import-not-found]
-    plot_pie_chart_number_of_flights_domestic_and_international,
-)
 from plotly_uk_airspace import (  # type: ignore[import-not-found]
     plot_airspace_polygons,
 )
@@ -36,6 +26,12 @@ from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUND
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (  # type: ignore[import-not-found]
+    plot_pie_chart_distance_forming_contrails,
+    plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
+    plot_pie_chart_number_of_flights_domestic_and_international,
+    plot_pie_chart_number_of_flights_forming_contrails,
 )
 
 
