@@ -6,17 +6,13 @@ import json
 import logging
 from pathlib import Path
 
-from plotly_distance_flown_by_flight_level_histogram import (  # type: ignore[import-not-found]
-    plot_distance_flown_by_flight_level_histogram,
-)
-from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
-    plot_energy_forcing_histogram,
-)
-
 from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_per_flight_histograms import (
+    plot_energy_forcing_histogram,
 )
 from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
     plot_pie_chart_distance_forming_contrails,
@@ -24,7 +20,10 @@ from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
     plot_pie_chart_number_of_flights_domestic_and_international,
     plot_pie_chart_number_of_flights_forming_contrails,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_data import (
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_histograms import (
+    plot_distance_flown_by_flight_level_histogram,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_maps import (
     plot_air_traffic_density_map,
     plot_airspace_polygons,
 )
