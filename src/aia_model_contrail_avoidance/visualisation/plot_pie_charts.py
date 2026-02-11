@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import plotly.express as px  # type: ignore[import-untyped]
+import plotly.express as px
 
 
 def plot_pie_chart_distance_traveled_by_domestic_and_international_flights(

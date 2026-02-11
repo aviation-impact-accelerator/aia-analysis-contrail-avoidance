@@ -6,7 +6,7 @@ from typing import TYPE_CHECKING, Any
 
 import matplotlib.pyplot as plt
 import numpy as np
-import plotly.express as px  # type: ignore[import-untyped]
+import plotly.express as px
 
 if TYPE_CHECKING:
     from pathlib import Path

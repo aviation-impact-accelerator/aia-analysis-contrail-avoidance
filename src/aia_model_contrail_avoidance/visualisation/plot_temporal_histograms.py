@@ -5,8 +5,8 @@ from __future__ import annotations
 from typing import Any
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore[import-untyped]
-from plotly.subplots import make_subplots  # type: ignore[import-untyped]
+import plotly.graph_objects as go
+from plotly.subplots import make_subplots
 
 from aia_model_contrail_avoidance.core_model.dimensions import (
     TemporalGranularity,
