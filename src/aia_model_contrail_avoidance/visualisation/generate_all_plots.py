@@ -41,7 +41,14 @@ def generate_all_plots(
     environmental_bounds: dict[str, float],
     spatial_granularity: SpatialGranularity,
 ) -> None:
-    """Generate all Plotly graphs."""
+    """Generate all Plotly graphs.
+
+    Args:
+        json_file_name: The name of the JSON file containing the energy forcing statistics.
+        flights_with_ef_dir: The directory containing the flight data with energy forcing values.
+        spatial_granularity: Spatial granularity for binning.
+        environmental_bounds: Optional dict with lat_min, lat_max, lon_min, lon_max.
+    """
     # read json file
     with Path(json_file_name).open() as f:
         energy_forcing_statistics = json.load(f)
