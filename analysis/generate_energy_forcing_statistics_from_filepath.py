@@ -442,7 +442,7 @@ def generate_energy_forcing_statistics(
 
 
 def generate_energy_forcing_statistics_from_filepath(
-    save_flights_with_ef_dir: Path,
+    flights_with_ef_dir: Path,
     output_filename_json: str,
     first_day: int,
     final_day: int,
@@ -450,7 +450,7 @@ def generate_energy_forcing_statistics_from_filepath(
     """Generate energy forcing statistics from calculated energy forcing data.
 
     Args:
-        save_flights_with_ef_dir: Directory containing parquet files with flight data
+        flights_with_ef_dir: Directory containing parquet files with flight data
           with energy forcing calculated.
         output_filename_json: Name of the output JSON file to save the statistics,
         (without extension).
@@ -459,7 +459,7 @@ def generate_energy_forcing_statistics_from_filepath(
     """
     start = time.time()
     energy_forcing_paraquet_files = sorted(
-        save_flights_with_ef_dir.glob("UK_flights_day_00*_with_ef.parquet")
+        flights_with_ef_dir.glob("UK_flights_day_00*_with_ef.parquet")
     )
     complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
     logger.info("Found %s files in directory.", len(energy_forcing_paraquet_files))
