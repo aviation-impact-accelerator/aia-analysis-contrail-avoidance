@@ -6,36 +6,29 @@ import json
 import logging
 from pathlib import Path
 
-from better_plotly_air_traffic_density import (  # type: ignore[import-not-found]
-    plot_air_traffic_density_map,
-)
-from plotly_contrails_formed_per_time import (  # type: ignore[import-not-found]
-    plot_contrails_formed_over_time,
-)
-from plotly_distance_flown_by_flight_level_histogram import (  # type: ignore[import-not-found]
-    plot_distance_flown_by_flight_level_histogram,
-)
-from plotly_energy_forcing_histogram import (  # type: ignore[import-not-found]
-    plot_energy_forcing_histogram,
-)
-from plotly_pie_chart_contrail_formation import (  # type: ignore[import-not-found]
-    plot_pie_chart_distance_forming_contrails,
-    plot_pie_chart_number_of_flights_forming_contrails,
-)
-from plotly_pie_chart_distance_flown_by_type import (  # type: ignore[import-not-found]
-    plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
-)
-from plotly_pie_chart_number_of_flights_by_type import (  # type: ignore[import-not-found]
-    plot_pie_chart_number_of_flights_domestic_and_international,
-)
-from plotly_uk_airspace import (  # type: ignore[import-not-found]
-    plot_airspace_polygons,
-)
-
 from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_per_flight_histograms import (
+    plot_energy_forcing_histogram,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
+    plot_pie_chart_distance_forming_contrails,
+    plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
+    plot_pie_chart_number_of_flights_domestic_and_international,
+    plot_pie_chart_number_of_flights_forming_contrails,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_histograms import (
+    plot_distance_flown_by_flight_level_histogram,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_maps import (
+    plot_air_traffic_density_map,
+    plot_airspace_polygons,
+)
+from aia_model_contrail_avoidance.visualisation.plotly_temporal_histograms import (
+    plot_contrails_formed_over_time,
 )
 
 
