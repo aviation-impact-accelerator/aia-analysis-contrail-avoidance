@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
+from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
     plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
 )
 
