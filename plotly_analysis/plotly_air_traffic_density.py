@@ -8,7 +8,7 @@ from aia_model_contrail_avoidance.core_model.airspace import (
     ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
 )
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_data import (
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_maps import (
     plot_air_traffic_density_map,
 )
 
