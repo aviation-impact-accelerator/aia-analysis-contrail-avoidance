@@ -84,7 +84,7 @@ def generate_all_plots(
 
     plot_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=energy_forcing_statistics,
-        output_file_name="pie_chart_number_of_flights_domestic_and_international_flights",
+        output_file_name="pie_chart_number_of_domestic_and_international_flights",
     )
     plot_pie_chart_distance_traveled_by_domestic_and_international_flights(
         flight_statistics=energy_forcing_statistics,
