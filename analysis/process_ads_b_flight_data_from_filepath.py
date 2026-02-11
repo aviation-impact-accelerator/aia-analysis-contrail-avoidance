@@ -20,7 +20,7 @@ logger = logging.getLogger(__name__)
 def process_ads_b_flight_data_from_filepath(
     temporal_flight_subset: TemporalFlightSubset,
     flight_departure_and_arrival_subset: FlightDepartureAndArrivalSubset,
-    unprocessed_paraquet_files: list[Path],
+    flights_with_ids_dir: Path,
     processed_flights_with_ids_dir: Path,
     processed_flights_info_dir: Path,
 ) -> None:
@@ -30,11 +30,12 @@ def process_ads_b_flight_data_from_filepath(
         temporal_flight_subset: TemporalFlightSubset, the temporal subset of flights to process.
         flight_departure_and_arrival_subset: FlightDepartureAndArrivalSubset,
         the subset of flights based on departure and arrival criteria.
-        unprocessed_paraquet_files: list[Path], list of paths to unprocessed parquet files.
+        flights_with_ids_dir: Path, directory containing unprocessed parquet files.
         processed_flights_with_ids_dir: Path, directory to save processed flights with IDs.
         processed_flights_info_dir: Path, directory to save processed flights info.
     """
     start = time.time()
+    unprocessed_paraquet_files = sorted(flights_with_ids_dir.glob("*.parquet"))
 
     logger.info("Processing with Temporal Subset: %s", temporal_flight_subset.name)
     logger.info("Available Temporal Subsets: %s", list(TemporalFlightSubset.__members__.keys()))
@@ -67,16 +68,16 @@ def process_ads_b_flight_data_from_filepath(
 
 if __name__ == "__main__":
     # input directory with ADS-B data files with flight ids added
-    FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_with_flight_ids").expanduser()
-    unprocessed_paraquet_files = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
-    PROCESSED_FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_processed_flights").expanduser()
-    PROCESSED_FLIGHTS_INFO_DIR = Path("~/ads_b_processed_flights_info").expanduser()
+    ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
+    FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_with_flight_ids"
+    PROCESSED_FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights"
+    PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
     temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
     flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
     process_ads_b_flight_data_from_filepath(
         temporal_flight_subset,
         flight_departure_and_arrival_subset,
-        unprocessed_paraquet_files,
+        FLIGHTS_WITH_IDS_DIR,
         PROCESSED_FLIGHTS_WITH_IDS_DIR,
         PROCESSED_FLIGHTS_INFO_DIR,
     )

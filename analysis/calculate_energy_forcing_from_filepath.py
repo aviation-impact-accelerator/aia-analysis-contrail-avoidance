@@ -26,15 +26,17 @@ BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT = False
 
 def add_energy_forcing_to_flight_info_database(
     flight_dataframe_with_ef: pl.DataFrame,
-    flight_info_with_ef_file_path: str,
+    flight_info_file_path: str,
+    save_flights_info_with_ef_dir: str,
 ) -> None:
     """Add energy forcing information to the flight information database.
 
     Args:
         flight_dataframe_with_ef: Polars DataFrame containing flight data with energy forcing
             information.
-        flight_info_with_ef_file_path: Path to save the flight information with energy forcing as a
-            parquet file.
+        flight_info_file_path: Path to the existing flight information parquet file.
+        save_flights_info_with_ef_dir: Directory to save the flight information with energy forcing
+            as a parquet file.
     """
     # Calculate total energy forcing for each unique flight
     unique_flight_ids = flight_dataframe_with_ef["flight_id"].unique().to_list()
@@ -45,17 +47,19 @@ def add_energy_forcing_to_flight_info_database(
         {"flight_id": unique_flight_ids, "total_energy_forcing": total_ef_list}
     )
     # Load the existing flight information database (assuming it's a parquet file)
-    flight_info_df = pl.read_parquet(flight_info_with_ef_file_path)
+    flight_info_df = pl.read_parquet(flight_info_file_path)
     # Join the two dataframes on flight_id
     joined_df = flight_info_df.join(energy_forcing_per_flight, on="flight_id", how="inner")
     # Save the joined dataframe to a new parquet file
-    joined_df.write_parquet(file=flight_info_with_ef_file_path, mkdir=True)
+    joined_df.write_parquet(file=save_flights_info_with_ef_dir, mkdir=True)
+    logger.info("flight info saved to path: %s", save_flights_info_with_ef_dir)
 
 
 def calculate_energy_forcing_for_flights(
     flight_dataframe_path: str,
+    flight_info_file_path: str,
     parquet_file_with_ef: str,
-    flight_info_with_ef_file_path: str,
+    save_flights_info_with_ef_dir: str,
 ) -> None:
     """Calculate energy forcing for flight data using the UK ADS-B January environment.
 
@@ -63,8 +67,9 @@ def calculate_energy_forcing_for_flights(
         flight_dataframe_path: Path to the flight data parquet file.
         parquet_file_with_ef: Path to save the flight timestamps with energy forcing as a parquet
             file.
-        flight_info_with_ef_file_path: Path to save the flight information with energy forcing as a
-            parquet file.
+        flight_info_file_path: Path to the existing flight information parquet file.
+        save_flights_info_with_ef_dir: Directory to save the flight information with energy forcing
+            as a parquet file.
     """
     # Load the processed flight data from parquet file
     flight_dataframe = pl.read_parquet(flight_dataframe_path)
@@ -90,34 +95,48 @@ def calculate_energy_forcing_for_flights(
 
     # Save the flight data with energy forcing to parquet
     flight_data_with_ef.write_parquet(file=parquet_file_with_ef, mkdir=True)
+    logger.info("Flight data saved to path: %s", parquet_file_with_ef)
 
     # Add energy forcing information to the flight information database
-    add_energy_forcing_to_flight_info_database(flight_data_with_ef, flight_info_with_ef_file_path)
+    add_energy_forcing_to_flight_info_database(
+        flight_data_with_ef, flight_info_file_path, save_flights_info_with_ef_dir
+    )
 
 
 def calculate_energy_forcing_from_filepath(
-    processed_paraquet_files: list[Path],
+    processed_flights_with_ids_dir: Path,
+    processed_flights_info_dir: Path,
     save_flights_with_ef_dir: Path,
     save_flights_info_with_ef_dir: Path,
 ) -> None:
     """Calculate energy forcing for processed ADS-B flight data.
 
     Args:
-        processed_paraquet_files: List of paths to processed parquet files containing flight data.
+        processed_flights_with_ids_dir: Directory containing processed parquet files with flight data.
+        processed_flights_info_dir: Directory containing processed parquet files with flight information.
         save_flights_with_ef_dir: Directory to save flights with energy forcing data.
         save_flights_info_with_ef_dir: Directory to save flight information with energy forcing.
     """
     start = time.time()
-    logger.info("Found %s files in directory.", len(processed_paraquet_files))
+
+    processed_paraquet_files = sorted(processed_flights_with_ids_dir.glob("*.parquet"))
+    logger.info("Found %s files to process.", len(processed_paraquet_files))
     for file_path in processed_paraquet_files:
         output_file_name = str(file_path.stem + "_with_ef")
         logger.info("Processing file: %s", output_file_name)
-
+        # Find the matching info file with the same stem (day number)
+        info_file_path = processed_flights_info_dir / f"{file_path.stem}_flight_info.parquet"
+        if not info_file_path.exists():
+            logger.warning("No matching info file found for %s, skipping.", file_path.name)
+            continue
+        info_output_file_name = str(info_file_path.stem + "_with_ef")
+        logger.info("Processing info file: %s", info_output_file_name)
         calculate_energy_forcing_for_flights(
             flight_dataframe_path=str(file_path),
+            flight_info_file_path=str(info_file_path),
             parquet_file_with_ef=str(save_flights_with_ef_dir / f"{output_file_name}.parquet"),
-            flight_info_with_ef_file_path=str(
-                save_flights_info_with_ef_dir / f"{file_path.stem}_flight_info.parquet"
+            save_flights_info_with_ef_dir=str(
+                save_flights_info_with_ef_dir / f"{info_output_file_name}.parquet"
             ),
         )
 
@@ -127,19 +146,20 @@ def calculate_energy_forcing_from_filepath(
 
 
 if __name__ == "__main__":
-    FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_processed_flights").expanduser()
-    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
-    SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("~/ads_b_processed_flights_info").expanduser()
+    ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
+    PROCESSED_FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights"
+    PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
+    SAVE_FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
+    SAVE_FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
 
     if not SAVE_FLIGHTS_WITH_EF_DIR.exists():
         SAVE_FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
     if not SAVE_FLIGHTS_INFO_WITH_EF_DIR.exists():
         SAVE_FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
 
-    processed_paraquet_files = sorted(FLIGHTS_WITH_IDS_DIR.glob("UK_flights_day_00*.parquet"))
-
     calculate_energy_forcing_from_filepath(
-        processed_paraquet_files,
+        PROCESSED_FLIGHTS_WITH_IDS_DIR,
+        PROCESSED_FLIGHTS_INFO_DIR,
         SAVE_FLIGHTS_WITH_EF_DIR,
         SAVE_FLIGHTS_INFO_WITH_EF_DIR,
     )

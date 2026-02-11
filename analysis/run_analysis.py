@@ -24,34 +24,29 @@ from aia_model_contrail_avoidance.flight_data_processing import (
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
 
+# Parent directory for all analysis inputs and outputs
+ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
+# Process flight data input directory
+FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_with_flight_ids"
+# Process flight data output directories
+PROCESSED_FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights"
+PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
+# Calculate energy forcing output directories
+SAVE_FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
+SAVE_FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
 
-# process flight data & calculate energy forcing input
-FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_with_flight_ids").expanduser()
-unprocessed_paraquet_files = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
+# user selection options
 temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
 flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
-# process flight data output
-PROCESSED_FLIGHTS_WITH_IDS_DIR = Path("~/ads_b_processed_flights").expanduser()
-processed_paraquet_files = sorted(PROCESSED_FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
-PROCESSED_FLIGHTS_INFO_DIR = Path("~/ads_b_processed_flights_info").expanduser()
-# calculate energy forcing outputs
-SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
-energy_forcing_paraquet_files = sorted(
-    SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet")
-)
-SAVE_FLIGHTS_INFO_WITH_EF_DIR = Path("~/ads_b_processed_flights_info").expanduser()
-# energy forcing statistics output
-energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
 first_day = 1
 final_day = 7
+energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
 
 
-def make_analysis_directories() -> list[Path]:
+def make_analysis_directories() -> None:
     """Create necessary directories for the analysis."""
     # if directory does not exist, throw error
-    if FLIGHTS_WITH_IDS_DIR.exists() and FLIGHTS_WITH_IDS_DIR.is_dir():
-        unprocessed_file_paths = sorted(FLIGHTS_WITH_IDS_DIR.glob("*.parquet"))
-    else:
+    if not FLIGHTS_WITH_IDS_DIR.exists() or not FLIGHTS_WITH_IDS_DIR.is_dir():
         logger.error(
             "\n Input directory not found: %s This directory will"
             " be created. \n Add the parquet files before running the script again.",
@@ -61,23 +56,67 @@ def make_analysis_directories() -> list[Path]:
         sys.exit(1)
 
     # if directoy does not exist, create it
-    if not PROCESSED_FLIGHTS_WITH_IDS_DIR.exists() and not PROCESSED_FLIGHTS_WITH_IDS_DIR.is_dir():
+    if not PROCESSED_FLIGHTS_WITH_IDS_DIR.exists():
+        PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
         logger.info(
             "Output directory created at: %s.",
             PROCESSED_FLIGHTS_WITH_IDS_DIR,
         )
-        PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
-        PROCESSED_FLIGHTS_INFO_DIR.mkdir(parents=True, exist_ok=True)
 
+    if not PROCESSED_FLIGHTS_INFO_DIR.exists():
+        PROCESSED_FLIGHTS_INFO_DIR.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "Output directory created at: %s.",
+            PROCESSED_FLIGHTS_INFO_DIR,
+        )
     if not SAVE_FLIGHTS_WITH_EF_DIR.exists():
         SAVE_FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "Output directory created at: %s.",
+            SAVE_FLIGHTS_WITH_EF_DIR,
+        )
     if not SAVE_FLIGHTS_INFO_WITH_EF_DIR.exists():
         SAVE_FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+        logger.info(
+            "Output directory created at: %s.",
+            SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+        )
 
-    return unprocessed_file_paths
+
+def remove_zone_identifier_files() -> None:
+    """Remove zone identifier files from the input directory."""
+    zone_identifier_files = sorted(FLIGHTS_WITH_IDS_DIR.glob("*:Zone.Identifier"))
+    if zone_identifier_files:
+        logger.info("Found %d zone identifier files to remove.", len(zone_identifier_files))
+        zone_identifier_user_selections = [
+            inquirer.List(
+                "processing steps",
+                message="Would you like to remove the zone identifier files?",
+                choices=[
+                    "Yes, remove the zone identifier files",
+                    "No, keep the zone identifier files",
+                ],
+            ),
+        ]
+        result = inquirer.prompt(zone_identifier_user_selections)
+        if result is None or result["processing steps"] == "Yes, remove the zone identifier files":
+            for file in zone_identifier_files:
+                try:
+                    logger.info("Removing zone identifier file: %s", file.name)
+                    file.unlink()
+                except OSError as e:
+                    logger.warning("Failed to remove %s: %s", file.name, e)
+        elif result["processing steps"] == "No, keep the zone identifier files":
+            logger.info(
+                "Keeping zone identifier files. Please remove them manually "
+                "before running the analysis."
+            )
+            sys.exit(0)
+    else:
+        logger.info("No zone identifier files found.")
 
 
-def processing_user_selction() -> dict[str, Any]:
+def process_user_selection() -> dict[str, Any]:
     """Prompt user for analysis options."""
     questions = [
         inquirer.Checkbox(
@@ -100,52 +139,59 @@ def processing_user_selction() -> dict[str, Any]:
 
 def run_analysis() -> None:
     """Run the analysis for contrail avoidance."""
+    remove_zone_identifier_files()
+    answers = process_user_selection()
     total_start = time.time()
-
-    answers = processing_user_selction()
-    print(answers)
     make_analysis_directories()
     if "All Steps" in answers["processing steps"]:
         process_ads_b_flight_data_from_filepath(
             temporal_flight_subset,
             flight_departure_and_arrival_subset,
-            unprocessed_paraquet_files,
+            FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_INFO_DIR,
         )
+
         calculate_energy_forcing_from_filepath(
-            processed_paraquet_files,
+            PROCESSED_FLIGHTS_WITH_IDS_DIR,
+            PROCESSED_FLIGHTS_INFO_DIR,
             SAVE_FLIGHTS_WITH_EF_DIR,
             SAVE_FLIGHTS_INFO_WITH_EF_DIR,
         )
+
         generate_energy_forcing_statistics_from_filepath(
-            energy_forcing_paraquet_files, energy_forcing_statistics_json, first_day, final_day
+            SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
         )
+        # fix later
+        print("plots")
 
     if "ADS-B Processing" in answers["processing steps"]:
         process_ads_b_flight_data_from_filepath(
             temporal_flight_subset,
             flight_departure_and_arrival_subset,
-            unprocessed_paraquet_files,
+            FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_INFO_DIR,
         )
 
     if "Calculate Energy Forcing" in answers["processing steps"]:
         calculate_energy_forcing_from_filepath(
-            processed_paraquet_files,
+            PROCESSED_FLIGHTS_WITH_IDS_DIR,
+            PROCESSED_FLIGHTS_INFO_DIR,
             SAVE_FLIGHTS_WITH_EF_DIR,
             SAVE_FLIGHTS_INFO_WITH_EF_DIR,
         )
     if "Generate Energy Forcing Statistics" in answers["processing steps"]:
         generate_energy_forcing_statistics_from_filepath(
-            energy_forcing_paraquet_files, energy_forcing_statistics_json, first_day, final_day
+            SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
         )
     if "Plots" in answers["processing steps"]:
         # fix later
         print("plots")
     if answers["processing steps"] == []:
-        logger.info("No analysis steps selected. Exiting.")
+        logger.info(
+            "No analysis steps selected. Please use spacebar to select steps and enter to run."
+        )
         sys.exit(0)
 
     total_end = time.time()

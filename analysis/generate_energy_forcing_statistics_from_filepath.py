@@ -442,7 +442,7 @@ def generate_energy_forcing_statistics(
 
 
 def generate_energy_forcing_statistics_from_filepath(
-    energy_forcing_paraquet_files: list[Path],
+    save_flights_with_ef_dir: Path,
     output_filename_json: str,
     first_day: int,
     final_day: int,
@@ -450,7 +450,7 @@ def generate_energy_forcing_statistics_from_filepath(
     """Generate energy forcing statistics from calculated energy forcing data.
 
     Args:
-        energy_forcing_paraquet_files: List of file paths to parquet files containing flight data
+        save_flights_with_ef_dir: Directory containing parquet files with flight data
           with energy forcing calculated.
         output_filename_json: Name of the output JSON file to save the statistics,
         (without extension).
@@ -458,6 +458,9 @@ def generate_energy_forcing_statistics_from_filepath(
         final_day: The final day to include in the statistics.
     """
     start = time.time()
+    energy_forcing_paraquet_files = sorted(
+        save_flights_with_ef_dir.glob("UK_flights_day_00*_with_ef.parquet")
+    )
     complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
     logger.info("Found %s files in directory.", len(energy_forcing_paraquet_files))
     logger.info("Generating Statistics from %s files.", final_day - first_day + 1)
@@ -465,14 +468,18 @@ def generate_energy_forcing_statistics_from_filepath(
         # read and append all dataframes together
         daily_dataframe = pl.read_parquet(parquet_file)
         if complete_flight_dataframe.is_empty():
-            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
-        else:
             complete_flight_dataframe = daily_dataframe
+        else:
+            complete_flight_dataframe = pl.concat([complete_flight_dataframe, daily_dataframe])
 
     logger.info(
         "Generating energy forcing statistics from %s to %s",
         complete_flight_dataframe["timestamp"].min(),
         complete_flight_dataframe["timestamp"].max(),
+    )
+    logger.info(
+        "Total number of flights in the dataframe: %d",
+        complete_flight_dataframe["flight_id"].n_unique(),
     )
 
     generate_energy_forcing_statistics(complete_flight_dataframe, output_filename_json)
@@ -485,13 +492,11 @@ def generate_energy_forcing_statistics_from_filepath(
 
 
 if __name__ == "__main__":
-    SAVE_FLIGHTS_WITH_EF_DIR = Path("~/ads_b_flights_with_ef").expanduser()
-    energy_forcing_parquet_files = sorted(
-        SAVE_FLIGHTS_WITH_EF_DIR.glob("UK_flights_day_00*_with_ef.parquet")
-    )
+    ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
+    SAVE_FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
     energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
     first_day = 1
     final_day = 7
     generate_energy_forcing_statistics_from_filepath(
-        energy_forcing_parquet_files, energy_forcing_statistics_json, first_day, final_day
+        SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
     )
