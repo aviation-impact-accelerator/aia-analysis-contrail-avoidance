@@ -4,9 +4,10 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Any
 
-import plotly.express as px  # type: ignore[import-untyped]
+from src.aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
+    plot_pie_chart_number_of_flights_domestic_and_international,
+)
 
 
 def plot_pie_chart_number_of_flights_by_type(
@@ -25,43 +26,6 @@ def plot_pie_chart_number_of_flights_by_type(
     plot_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=flight_statistics,
         output_file_name=output_file_name,
-    )
-
-
-def plot_pie_chart_number_of_flights_domestic_and_international(
-    flight_statistics: dict[str, Any],
-    output_file_name: str,
-) -> None:
-    """Plot pie chart of number of domestic vs international flights.
-
-    Args:
-        flight_statistics: Dictionary containing flight statistics
-        output_file_name: Name of the output file to save the plot (without extension)
-    """
-    domestic_flights = flight_statistics["number_of_flights"]["regional"]
-    international_flights = flight_statistics["number_of_flights"]["international"]
-
-    fig = px.pie(
-        names=["Domestic Flights", "International Flights"],
-        values=[domestic_flights, international_flights],
-        title="Number of Domestic <br> vs International Flights",
-        color_discrete_sequence=["#6a9179", "#FF6F61"],
-    )
-    fig.update_layout(
-        legend={"yanchor": "bottom", "y": -1.5, "xanchor": "center", "x": 0.5, "orientation": "h"},
-        title={
-            "x": 0.5,
-            "xanchor": "center",
-            # decrease text size of the title
-            "font": {"size": 13},
-        },
-    )
-
-    fig.write_html(
-        f"results/plots/{output_file_name}.html",
-        config={"displaylogo": False},
-        full_html=False,
-        include_plotlyjs="cdn",
     )
 
 
