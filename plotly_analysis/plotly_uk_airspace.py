@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_data import (
+from aia_model_contrail_avoidance.visualisation.plotly_spatial_maps import (
     plot_airspace_polygons,
 )
 
