@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from aia_model_contrail_avoidance.visualisation.plotly_per_flight_histograms import (
+from aia_model_contrail_avoidance.visualisation.plot_per_flight_histograms import (
     plot_energy_forcing_histogram,
 )
 
