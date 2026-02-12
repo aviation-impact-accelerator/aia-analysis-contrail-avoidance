@@ -8,17 +8,22 @@ import time
 from pathlib import Path
 from typing import Any, cast
 
-import inquirer  # type: ignore[import-untyped]
+import inquirer
 from calculate_energy_forcing_from_filepath import calculate_energy_forcing_from_filepath
 from generate_energy_forcing_statistics_from_filepath import (
     generate_energy_forcing_statistics_from_filepath,
 )
 from process_ads_b_flight_data_from_filepath import process_ads_b_flight_data_from_filepath
 
+from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+from aia_model_contrail_avoidance.core_model.dimensions import (
+    SpatialGranularity,
+)
 from aia_model_contrail_avoidance.flight_data_processing import (
     FlightDepartureAndArrivalSubset,
     TemporalFlightSubset,
 )
+from aia_model_contrail_avoidance.visualisation.generate_all_plots import generate_all_plots
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
@@ -32,8 +37,8 @@ FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_with_flight_ids"
 PROCESSED_FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights"
 PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
 # Calculate energy forcing output directories
-SAVE_FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
-SAVE_FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
+FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
+FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
 
 # user selection options
 temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
@@ -41,6 +46,9 @@ flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
 first_day = 1
 final_day = 7
 energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
+plot_energy_forcing_statistics_json = "results/energy_forcing_statistics_week_1_2024.json"
+enviornmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+spatial_granularity = SpatialGranularity.ONE_DEGREE
 
 
 def make_analysis_directories() -> None:
@@ -69,17 +77,17 @@ def make_analysis_directories() -> None:
             "Output directory created at: %s.",
             PROCESSED_FLIGHTS_INFO_DIR,
         )
-    if not SAVE_FLIGHTS_WITH_EF_DIR.exists():
-        SAVE_FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+    if not FLIGHTS_WITH_EF_DIR.exists():
+        FLIGHTS_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
         logger.info(
             "Output directory created at: %s.",
-            SAVE_FLIGHTS_WITH_EF_DIR,
+            FLIGHTS_WITH_EF_DIR,
         )
-    if not SAVE_FLIGHTS_INFO_WITH_EF_DIR.exists():
-        SAVE_FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
+    if not FLIGHTS_INFO_WITH_EF_DIR.exists():
+        FLIGHTS_INFO_WITH_EF_DIR.mkdir(parents=True, exist_ok=True)
         logger.info(
             "Output directory created at: %s.",
-            SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+            FLIGHTS_INFO_WITH_EF_DIR,
         )
 
 
@@ -155,15 +163,19 @@ def run_analysis() -> None:
         calculate_energy_forcing_from_filepath(
             PROCESSED_FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_INFO_DIR,
-            SAVE_FLIGHTS_WITH_EF_DIR,
-            SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+            FLIGHTS_WITH_EF_DIR,
+            FLIGHTS_INFO_WITH_EF_DIR,
         )
 
         generate_energy_forcing_statistics_from_filepath(
-            SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
+            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
         )
-        # fix later
-        print("plots")
+        generate_all_plots(
+            json_file_name=plot_energy_forcing_statistics_json,
+            flights_with_ef_dir=FLIGHTS_WITH_EF_DIR,
+            environmental_bounds=enviornmental_bounds,
+            spatial_granularity=spatial_granularity,
+        )
 
     if "ADS-B Processing" in answers["processing steps"]:
         process_ads_b_flight_data_from_filepath(
@@ -178,16 +190,20 @@ def run_analysis() -> None:
         calculate_energy_forcing_from_filepath(
             PROCESSED_FLIGHTS_WITH_IDS_DIR,
             PROCESSED_FLIGHTS_INFO_DIR,
-            SAVE_FLIGHTS_WITH_EF_DIR,
-            SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+            FLIGHTS_WITH_EF_DIR,
+            FLIGHTS_INFO_WITH_EF_DIR,
         )
     if "Generate Energy Forcing Statistics" in answers["processing steps"]:
         generate_energy_forcing_statistics_from_filepath(
-            SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
+            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
         )
     if "Plots" in answers["processing steps"]:
-        # fix later
-        print("plots")
+        generate_all_plots(
+            json_file_name=plot_energy_forcing_statistics_json,
+            flights_with_ef_dir=FLIGHTS_WITH_EF_DIR,
+            environmental_bounds=enviornmental_bounds,
+            spatial_granularity=spatial_granularity,
+        )
     if answers["processing steps"] == []:
         logger.info(
             "No analysis steps selected. Please use spacebar to select steps and enter to run."

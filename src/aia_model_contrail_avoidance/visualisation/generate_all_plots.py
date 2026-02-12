@@ -1,4 +1,4 @@
-"""This module generates all Plotly graphs in one run."""
+"""Generate all plots for the analysis."""
 
 from __future__ import annotations
 
@@ -11,34 +11,48 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     SpatialGranularity,
     TemporalGranularity,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_per_flight_histograms import (
+from aia_model_contrail_avoidance.visualisation.plot_per_flight_histograms import (
     plot_energy_forcing_histogram,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_pie_charts import (
+from aia_model_contrail_avoidance.visualisation.plot_pie_charts import (
     plot_pie_chart_distance_forming_contrails,
     plot_pie_chart_distance_traveled_by_domestic_and_international_flights,
     plot_pie_chart_number_of_flights_domestic_and_international,
     plot_pie_chart_number_of_flights_forming_contrails,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_histograms import (
+from aia_model_contrail_avoidance.visualisation.plot_spatial_histograms import (
     plot_distance_flown_by_flight_level_histogram,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_maps import (
+from aia_model_contrail_avoidance.visualisation.plot_spatial_maps import (
     plot_air_traffic_density_map,
-    plot_airspace_polygons,
+    plot_uk_airspace_map,
 )
-from aia_model_contrail_avoidance.visualisation.plotly_temporal_histograms import (
+from aia_model_contrail_avoidance.visualisation.plot_temporal_histograms import (
     plot_contrails_formed_over_time,
 )
 
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-def generate_all_plotly() -> None:
-    """Generate all Plotly graphs."""
+
+def generate_all_plots(
+    json_file_name: str,
+    flights_with_ef_dir: Path,
+    environmental_bounds: dict[str, float],
+    spatial_granularity: SpatialGranularity,
+) -> None:
+    """Generate all Plotly graphs.
+
+    Args:
+        json_file_name: The name of the JSON file containing the energy forcing statistics.
+        flights_with_ef_dir: The directory containing the flight data with energy forcing values.
+        spatial_granularity: Spatial granularity for binning.
+        environmental_bounds: Optional dict with lat_min, lat_max, lon_min, lon_max.
+    """
     # read json file
-    file_name = "results/energy_forcing_statistics_week_1_2024.json"
-    with Path(file_name).open() as f:
+    with Path(json_file_name).open() as f:
         energy_forcing_statistics = json.load(f)
-    logger.info("Loaded data from %s", file_name)
+    logger.info("Loaded data from %s", json_file_name)
 
     # temporal options available in the data
     available_temporal_granularities = list(
@@ -47,7 +61,7 @@ def generate_all_plotly() -> None:
     logger.info(
         "Available temporal granularities in the data: %s", available_temporal_granularities
     )
-
+    logger.info("Generating all Plotly graphs.")
     # plot data that varies by temporal granularity
 
     for temporal_granularity_key in available_temporal_granularities:
@@ -71,13 +85,13 @@ def generate_all_plotly() -> None:
         output_file="distance_flown_by_flight_level_histogram",
     )
 
-    plot_airspace_polygons(
+    plot_uk_airspace_map(
         output_file="uk_airspace_map",
     )
 
     plot_pie_chart_number_of_flights_domestic_and_international(
         flight_statistics=energy_forcing_statistics,
-        output_file_name="pie_chart_number_of_flights_domestic_and_international_flights",
+        output_file_name="pie_chart_number_of_domestic_and_international_flights",
     )
     plot_pie_chart_distance_traveled_by_domestic_and_international_flights(
         flight_statistics=energy_forcing_statistics,
@@ -94,21 +108,22 @@ def generate_all_plotly() -> None:
 
     # plot data that requires the full dataframe (e.g. for spatial plotting)
     # use first day of data as sample for plotting
-    flights_with_ef_dir = Path("~/ads_b_flights_with_ef").expanduser()
     parquet_files = sorted(flights_with_ef_dir.glob("*.parquet"))
     parquet_file_path = parquet_files[0]
 
     plot_air_traffic_density_map(
         parquet_file_path=parquet_file_path,
-        environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
-        spatial_granularity=SpatialGranularity.ONE_DEGREE,
+        environmental_bounds=environmental_bounds,
+        spatial_granularity=spatial_granularity,
         output_file="air_traffic_density_map_uk_airspace",
     )
+    logger.info("Finished generating all Plotly graphs.")
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger(__name__)
-    logger.info("Generating all Plotly graphs.")
-    generate_all_plotly()
-    logger.info("Finished generating all Plotly graphs.")
+    generate_all_plots(
+        json_file_name="results/energy_forcing_statistics_week_1_2024.json",
+        flights_with_ef_dir=Path("~/ads_b_analysis/ads_b_flights_with_ef").expanduser(),
+        environmental_bounds=ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
+        spatial_granularity=SpatialGranularity.ONE_DEGREE,
+    )

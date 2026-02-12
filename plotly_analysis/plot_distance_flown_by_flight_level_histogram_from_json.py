@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from aia_model_contrail_avoidance.visualisation.plotly_spatial_histograms import (
+from aia_model_contrail_avoidance.visualisation.plot_spatial_histograms import (
     plot_distance_flown_by_flight_level_histogram,
 )
 

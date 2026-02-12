@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 import numpy as np
-import plotly.graph_objects as go  # type: ignore[import-untyped]
+import plotly.graph_objects as go
 import polars as pl
 from shapely.geometry import box
 
@@ -34,7 +34,7 @@ center_lat = (SOUTH + NORTH) / 2
 center_lon = (WEST + EAST) / 2 - 5  # Shift west
 
 
-def plot_airspace_polygons(
+def plot_uk_airspace_map(
     output_file: str | Path,
 ) -> None:
     """Plot UK airspace polygons on a map.

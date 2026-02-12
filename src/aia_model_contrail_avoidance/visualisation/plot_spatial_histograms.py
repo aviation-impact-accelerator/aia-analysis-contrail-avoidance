@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import plotly.express as px  # type: ignore[import-untyped]
+import plotly.express as px
 
 
 def plot_distance_flown_by_flight_level_histogram(
