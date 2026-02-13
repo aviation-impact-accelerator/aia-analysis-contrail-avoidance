@@ -45,8 +45,9 @@ temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
 flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
 first_day = 1
 final_day = 7
+enviornment_filename = "cocip_grid_global_week_1_2024"
 energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
-plot_energy_forcing_statistics_json = "results/energy_forcing_statistics_week_1_2024.json"
+plot_energy_forcing_statistics_json = f"results/{energy_forcing_statistics_json}.json"
 enviornmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 spatial_granularity = SpatialGranularity.ONE_DEGREE
 
@@ -165,6 +166,7 @@ def run_analysis() -> None:
             PROCESSED_FLIGHTS_INFO_DIR,
             FLIGHTS_WITH_EF_DIR,
             FLIGHTS_INFO_WITH_EF_DIR,
+            enviornment_filename=enviornment_filename,
         )
 
         generate_energy_forcing_statistics_from_filepath(
@@ -192,6 +194,7 @@ def run_analysis() -> None:
             PROCESSED_FLIGHTS_INFO_DIR,
             FLIGHTS_WITH_EF_DIR,
             FLIGHTS_INFO_WITH_EF_DIR,
+            enviornment_filename=enviornment_filename,
         )
     if "Generate Energy Forcing Statistics" in answers["processing steps"]:
         generate_energy_forcing_statistics_from_filepath(
