@@ -10,11 +10,6 @@ __all__ = [
 
 # Global constants taken from literature introducing the CoCiPGrid model by Engberg et al. 2025
 
-CO2_EQUIVALENT_PER_FUEL_MASS = 4.70e9  # J/kg fuel
-"""Conversion factor from fuel mass to CO2 equivalent,
-based on calculation in Teoh et al 2020 and a 100 year time horizon for global warming potential.
-Units: Joules of energy forcing per kg of fuel burned."""
-
 CO2_PER_FUEL_MASS_BURNED = 3.16  # kg CO2 per kg fuel
 """Conversion factor from fuel mass burned to CO2 mass emitted,
 Units: kg of CO2 emitted per kg of fuel burned."""
@@ -38,12 +33,6 @@ ABSOLUTE_GLOBAL_WARMING_POTENTIAL_OVER_100_YEARS = 7.54e-7  # J/m^2 kg C02
 based on calculation in Gaillot et al 2023.
 Units: Joules of energy forcing per square meter per kg of CO2 emitted over 100 years."""
 
-
-ABSOLUTE_GLOBAL_WARMING_POTENTIAL_OVER_20_YEARS = 2.78e-6  # J/m^2 kg C02
-"""Absolute global warming potential over 20 years for CO2,
-based on calculation in Gaillot et al 2023.
-Units: Joules of energy forcing per square meter per kg of CO2 emitted over 20 years."""
-
 SURFACE_AREA_OF_EARTH = 5.1e14  # m^2
 """Surface area of the Earth.
 Units: square meters."""
@@ -51,6 +40,18 @@ Units: square meters."""
 NAUTICAL_MILES_TO_METERS = 1852  # m/ nautical mile
 """Conversion factor from nautical miles to meters.
 Units: meters per nautical mile."""
+
+# Unused constants kept for reference and potential future use:
+
+ABSOLUTE_GLOBAL_WARMING_POTENTIAL_OVER_20_YEARS = 2.78e-6  # J/m^2 kg C02
+"""Absolute global warming potential over 20 years for CO2,
+based on calculation in Gaillot et al 2023.
+Units: Joules of energy forcing per square meter per kg of CO2 emitted over 20 years."""
+
+CO2_EQUIVALENT_ENERGY_PER_FUEL_MASS = 4.70e9  # J/kg fuel
+"""Conversion factor from fuel mass to CO2 equivalent energy forcing,
+based on calculation in Teoh et al 2020 and a 100 year time horizon for global warming potential.
+Units: Joules of energy forcing per kg of fuel burned."""
 
 
 def calculate_co2_mass_equivalent_from_energy_forcing(energy_forcing: float) -> float:
