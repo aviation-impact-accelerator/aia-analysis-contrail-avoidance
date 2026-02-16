@@ -401,8 +401,7 @@ def merge_close_datapoints_of_flight(
         .alias("prev_distance_flown_in_segment")
     )
     flight_dataframe = flight_dataframe.with_columns(
-        pl.col("distance_flown_in_segment")
-        + pl.col("prev_distance_flown_in_segment")
+        (pl.col("distance_flown_in_segment") + pl.col("prev_distance_flown_in_segment"))
         .fill_null(0.0)
         .alias("total_distance_of_current_and_previous")
     )
