@@ -11,6 +11,11 @@ import numpy as np
 import polars as pl
 
 from aia_model_contrail_avoidance.core_model.airports import list_of_uk_airports
+from aia_model_contrail_avoidance.core_model.climate import (
+    calculate_co2_mass_burned_from_flight_distance,
+    calculate_co2_mass_equivalent_from_energy_forcing,
+    calculate_energy_forcing_from_flight_distance,
+)
 from aia_model_contrail_avoidance.core_model.dimensions import (
     TemporalGranularity,
     _get_temporal_grouping_field,
@@ -372,6 +377,17 @@ def generate_energy_forcing_statistics(
             "total": float(total_energy_forcing),
             "uk_airspace": float(total_energy_forcing_in_uk_airspace),
             "international_airspace": float(total_energy_forcing_in_international_airspace),
+            "total_from_fuel_burn": float(
+                calculate_energy_forcing_from_flight_distance(total_distance_flown)
+            ),
+        },
+        "emissions": {
+            "total_co2_emissions_from_fuel_burn": calculate_co2_mass_burned_from_flight_distance(
+                total_distance_flown
+            ),
+            "total_co2_equivalent_emissions_from_contrails": calculate_co2_mass_equivalent_from_energy_forcing(
+                total_energy_forcing
+            ),
         },
         "cumulative_energy_forcing_per_flight": {
             "histogram": create_plot_cumulative_energy_forcing_flight(complete_flight_dataframe),
