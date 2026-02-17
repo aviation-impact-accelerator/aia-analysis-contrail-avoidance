@@ -107,13 +107,18 @@ def test_calculate_effective_radiative_forcing(flight_level: int, expected_total
     heathrow_airport_location = (51.4700, -0.4543)
     edinburgh_airport_location = (55.9533, -3.1883)
 
+    flight_level_feet = flight_level * 100  # Convert from FL units to feet
+    flight_level_meters = flight_level_feet * 0.3048  # Convert feet to meters
+    # Barometric formula: P = P0 * (1 - L*h/T0)^(g*M/R/L)
+    flight_level_hpa = 1013.25 * (1 - 0.0065 * flight_level_meters / 288.15) ** 5.255
+
     sample_flight_dataframe = generate_synthetic_flight(
         flight_id=1,
         departure_location=heathrow_airport_location,
         arrival_location=edinburgh_airport_location,
         departure_time=departure_time,
         length_of_flight=length_of_flight,
-        flight_level=flight_level,
+        flight_level=flight_level_hpa,
     )
 
     flight_with_ef = run_flight_data_through_environment(sample_flight_dataframe, environment)
