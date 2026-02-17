@@ -2,18 +2,10 @@
 
 from __future__ import annotations
 
-__all__ = (
-    "flight_distance_from_location",
-    "generate_synthetic_flight",
-    "most_common_cruise_flight_level",
-)
-
-import datetime
+__all__ = ("flight_distance_from_location", "flight_distance_from_location_vectorized")
 
 import numpy as np
 import polars as pl
-
-from aia_model_contrail_avoidance.config import FLIGHT_TIMESTAMPS_SCHEMA
 
 
 def to_float_numpy(series: pl.Series) -> np.ndarray:
@@ -27,51 +19,6 @@ def to_float_numpy(series: pl.Series) -> np.ndarray:
     if isinstance(series, pl.Series):
         return series.cast(float).to_numpy()
     return np.asarray(series, dtype=float)
-
-
-def generate_synthetic_flight(  # noqa: PLR0913
-    flight_id: int,
-    departure_location: tuple[float, float],
-    arrival_location: tuple[float, float],
-    departure_time: datetime.datetime,
-    length_of_flight: float,
-    flight_level: int,
-) -> pl.DataFrame:
-    """Generates synthetic flight from departure to arrival location as a series of timestamps.
-
-    Args:
-        flight_id: Unique identifier for the flight.
-        departure_location: Tuple of (latitude, longitude) for departure.
-        arrival_location: Tuple of (latitude, longitude) for arrival.
-        departure_time: Departure time as a datetime object.
-        length_of_flight: Length of flight in seconds.
-        flight_level: Flight level as the standard pHa.
-    """
-    distance_traveled_in_nautical_miles = flight_distance_from_location(
-        departure_location, arrival_location
-    )
-    number_of_timestamps = int(distance_traveled_in_nautical_miles)  # 1 nautical mile per timestamp
-    latitudes = np.linspace(departure_location[0], arrival_location[0], number_of_timestamps)
-    longitudes = np.linspace(departure_location[1], arrival_location[1], number_of_timestamps)
-    timestamps = [
-        departure_time + datetime.timedelta(seconds=i * (length_of_flight / number_of_timestamps))
-        for i in range(number_of_timestamps)
-    ]
-
-    return pl.DataFrame(
-        {
-            "flight_id": np.full(number_of_timestamps, flight_id, dtype=int),
-            "departure_location": [list(departure_location)] * number_of_timestamps,
-            "arrival_location": [list(arrival_location)] * number_of_timestamps,
-            "departure_time": [departure_time] * number_of_timestamps,
-            "timestamp": timestamps,
-            "latitude": latitudes,
-            "longitude": longitudes,
-            "flight_level": np.full(number_of_timestamps, flight_level, dtype=int),
-            "distance_flown_in_segment": np.full(number_of_timestamps, 1.0, dtype=float),
-        },
-        schema=FLIGHT_TIMESTAMPS_SCHEMA,
-    )
 
 
 def flight_distance_from_location_vectorized(
@@ -168,14 +115,6 @@ def flight_distance_from_location(
 
     result = earth_radius * c
     return float(result[0]) if result.size == 1 else result
-
-
-def most_common_cruise_flight_level() -> int:
-    """Most common cruise flight level for an aircraft in UK airspace.
-
-    Currently coinsides with sample grid data but will be updated.
-    """
-    return 300
 
 
 def read_ads_b_flight_dataframe() -> pl.DataFrame:
