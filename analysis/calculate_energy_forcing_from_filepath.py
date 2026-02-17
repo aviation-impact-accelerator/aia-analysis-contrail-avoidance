@@ -58,6 +58,7 @@ def add_energy_forcing_to_flight_info_database(
 def calculate_energy_forcing_for_flights(
     flight_dataframe_path: str,
     flight_info_file_path: str,
+    enviornment_filename: str,
     parquet_file_with_ef: str,
     save_flights_info_with_ef_dir: str,
 ) -> None:
@@ -67,6 +68,8 @@ def calculate_energy_forcing_for_flights(
         flight_dataframe_path: Path to the flight data parquet file.
         parquet_file_with_ef: Path to save the flight timestamps with energy forcing as a parquet
             file.
+        enviornment_filename: Filename of the saved CocipGrid environment dataset to use for energy
+            forcing calculation.
         flight_info_file_path: Path to the existing flight information parquet file.
         save_flights_info_with_ef_dir: Directory to save the flight information with energy forcing
             as a parquet file.
@@ -75,7 +78,7 @@ def calculate_energy_forcing_for_flights(
     flight_dataframe = pl.read_parquet(flight_dataframe_path)
 
     logger.info("Loading environment data")
-    environment = create_grid_environment("cocip_grid_global_week_1_2024")
+    environment = create_grid_environment(enviornment_filename)
 
     if BOOL_REMOVE_DATAPOINTS_OUTSIDE_UK_ENVIRONMENT:
         # Remove datapoints that are outside the environment (latitude and longitude bounds)
@@ -108,6 +111,7 @@ def calculate_energy_forcing_from_filepath(
     processed_flights_info_dir: Path,
     save_flights_with_ef_dir: Path,
     save_flights_info_with_ef_dir: Path,
+    enviornment_filename: str,
 ) -> None:
     """Calculate energy forcing for processed ADS-B flight data.
 
@@ -116,6 +120,7 @@ def calculate_energy_forcing_from_filepath(
         processed_flights_info_dir: Directory containing processed parquet files with flight information.
         save_flights_with_ef_dir: Directory to save flights with energy forcing data.
         save_flights_info_with_ef_dir: Directory to save flight information with energy forcing.
+        enviornment_filename: Filename of the saved CocipGrid environment dataset to use for energy
     """
     start = time.time()
 
@@ -138,6 +143,7 @@ def calculate_energy_forcing_from_filepath(
             save_flights_info_with_ef_dir=str(
                 save_flights_info_with_ef_dir / f"{info_output_file_name}.parquet"
             ),
+            enviornment_filename=enviornment_filename,
         )
 
     end = time.time()
@@ -162,4 +168,5 @@ if __name__ == "__main__":
         PROCESSED_FLIGHTS_INFO_DIR,
         SAVE_FLIGHTS_WITH_EF_DIR,
         SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+        enviornment_filename="cocip_grid_global_week_1_2024",
     )

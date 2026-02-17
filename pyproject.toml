@@ -23,6 +23,16 @@ dependencies = [
     "plotly>=6.5.2",
     "polars>=1.37.1",
     "boto3>=1.40.70",
+    "netcdf4>=1.7.3",
+    "pandas>=2.3.3",
+    "xarray>=2025.11.0",
+    "dask>=2025.11.0",
+    "bottleneck>=1.6.0",
+    "scipy>=1.16.3",
+    "numpy>=2.3.5",
+    "packaging>=25.0",
+    "pydap>=3.5.8",
+    "h5netcdf>=1.8.1",
 ]
 
 [project.urls]

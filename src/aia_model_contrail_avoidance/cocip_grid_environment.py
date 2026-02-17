@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import matplotlib.pyplot as plt
@@ -19,7 +20,7 @@ PROJECT_ROOT = Path(__file__).parent.parent.parent
 
 
 def generate_cocip_grid_environment(
-    time_bounds: tuple[str, str],
+    modelling_time_bounds: tuple[str, str],
     lon_bounds: tuple[float, float],
     lat_bounds: tuple[float, float],
     pressure_levels: tuple[int, ...],
@@ -28,16 +29,23 @@ def generate_cocip_grid_environment(
     """Create a CocipGrid environment for contrail modeling.
 
     Args:
-        time_bounds: Start and end times for the model run.
+        modelling_time_bounds: Start and end times for the model run.
         lon_bounds: Longitude bounds for the model domain.
+
         lat_bounds: Latitude bounds for the model domain.
         pressure_levels: Pressure levels to be used in the model.
         save_filename: Filename to save the resulting dataset.
     """
     # Download meteorological data
-    era5 = ERA5(time_bounds, pressure_levels=pressure_levels, variables=CocipGrid.met_variables)
+    end_time = datetime.strptime(modelling_time_bounds[1], "%Y-%m-%d %H:%M:%S")  # noqa: DTZ007
+    new_end_time = (end_time + timedelta(hours=11)).strftime("%Y-%m-%d %H:%M:%S")
+    weather_time_bounds = (modelling_time_bounds[0], new_end_time)
+    era5 = ERA5(
+        weather_time_bounds, pressure_levels=pressure_levels, variables=CocipGrid.met_variables
+    )
     met = era5.open_metdataset()
-    era5_rad = ERA5(time_bounds, variables=CocipGrid.rad_variables)
+
+    era5_rad = ERA5(weather_time_bounds, variables=CocipGrid.rad_variables)
     rad = era5_rad.open_metdataset()
 
     # Model parameters
@@ -58,9 +66,7 @@ def generate_cocip_grid_environment(
     # Create a grid source
     coords = {
         "level": pressure_levels,
-        "time": pd.date_range(time_bounds[0], time_bounds[1], freq="1h")[
-            0:4
-        ],  # run for first 4 hours of domain
+        "time": pd.date_range(modelling_time_bounds[0], modelling_time_bounds[1], freq="1h"),
         "longitude": np.arange(lon_bounds[0], lon_bounds[1], 1.0),
         "latitude": np.arange(lat_bounds[0], lat_bounds[1], 1.0),
     }
@@ -70,7 +76,7 @@ def generate_cocip_grid_environment(
     result = cocip_grid.eval(source=grid_source)
     # save dataset to netcdf
     output_path = PROJECT_ROOT / "data" / "energy_forcing_data" / f"{save_filename}.nc"
-    result.data.to_netcdf(str(output_path))
+    result.data.to_netcdf(str(output_path), engine="netcdf4")
 
 
 def plot_cocip_grid_environment(
@@ -88,7 +94,7 @@ def plot_cocip_grid_environment(
         save_filename: Filename to save the plot.
     """
     file_path = PROJECT_ROOT / "data" / "energy_forcing_data" / f"{environment_filename}.nc"
-    grid_data = xr.open_dataset(str(file_path))
+    grid_data = xr.open_dataset(str(file_path), engine="netcdf4")
     plt.figure(figsize=(12, 8))
     ef_per_m = grid_data["ef_per_m"].isel(
         time=selected_time_index, level=selected_flight_level_index
