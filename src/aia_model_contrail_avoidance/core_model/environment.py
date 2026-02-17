@@ -41,7 +41,8 @@ def create_grid_environment(environment_file_name: str) -> xr.DataArray:
     environment_dataset = xr.open_dataset(
         "data/energy_forcing_data/" + environment_file_name + ".nc",
         decode_timedelta=True,
-        drop_variables=("air_pressure", "altitude", "contrail_age"),
+        drop_variables=("air_pressure", "contrail_age"),
+        engine="netcdf4",
     )
     return xr.DataArray(
         environment_dataset["ef_per_m"], dims=("longitude", "latitude", "level", "time")
@@ -111,10 +112,17 @@ def run_flight_data_through_environment(
 
     longitude_vector = xr.DataArray(flight_dataset["longitude"].to_numpy(), dims=["points"])
     latitude_vector = xr.DataArray(flight_dataset["latitude"].to_numpy(), dims=["points"])
-    flight_level_vector = xr.DataArray(
-        flight_dataset["flight_level"].to_numpy(),
-        dims=["points"],
-    )
+
+    # Convert flight level (in hundreds of feet) to pressure altitude (hPa) using standard atmosphere
+    # Flight Level 250 = 25,000 feet
+    flight_level_feet = (
+        flight_dataset["flight_level"].to_numpy() * 100
+    )  # Convert from FL units to feet
+    flight_level_meters = flight_level_feet * 0.3048  # Convert feet to meters
+    # Barometric formula: P = P0 * (1 - L*h/T0)^(g*M/R/L)
+    flight_level_hpa = 1013.25 * (1 - 0.0065 * flight_level_meters / 288.15) ** 5.255
+    flight_level_vector = xr.DataArray(flight_level_hpa, dims=["points"])
+
     time_vector = xr.DataArray(flight_dataset["timestamp"].to_numpy(), dims=["points"])
 
     distance_flown_in_segment_vector = (
