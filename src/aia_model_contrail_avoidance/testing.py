@@ -126,12 +126,36 @@ def generate_synthetic_flight_database(
 
     flight_dataframe.write_parquet(f"data/contrails_model_data/{database_name}.parquet")
 
-def create_flight_info_list_with_time_offset(
-        number_of_flights,
-        time_offset,
-        departure_airport,
-        arrival_airport,
-        departure_time,
-        length_of_flight,
-        flight_level,
-)
+
+def create_flight_info_list_with_time_offset(  # noqa: PLR0913
+    number_of_flights: int,
+    time_offset: float,
+    departure_airport: str,
+    arrival_airport: str,
+    departure_time: datetime.datetime,
+    length_of_flight: float,
+    flight_level: float,
+) -> list[dict[str, Any]]:
+    """Generate a flight info list for the same flight offset by a constant time.
+
+    Args:
+        number_of_flights: Number of flights in the list.
+        time_offset: Time offset in hours between each flight.
+        departure_airport: ICAO code for departure airport.
+        arrival_airport: ICAO code for arrival airport.
+        departure_time: Departure time for the first flight as a datetime object.
+        length_of_flight: Length of flight in hours.
+        flight_level: Flight level for all flights.
+    """
+    flight_info_list = []
+    for i in range(number_of_flights):
+        new_flight = {
+            "flight_id": i + 1,
+            "departure_airport": departure_airport,
+            "arrival_airport": arrival_airport,
+            "departure_time": departure_time + datetime.timedelta(hours=i * time_offset),
+            "length_of_flight": length_of_flight,
+            "flight_level": flight_level,
+        }
+        flight_info_list.append(new_flight)
+    return flight_info_list
