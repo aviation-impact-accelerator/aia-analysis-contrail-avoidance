@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 __all__ = [
+    "create_flight_info_list_with_time_offset",
     "create_synthetic_grid_environment",
     "generate_synthetic_flight",
+    "generate_synthetic_flight_database",
 ]
 
 import datetime
