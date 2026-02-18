@@ -8,12 +8,14 @@ __all__ = [
 ]
 
 import datetime
+from typing import Any
 
 import numpy as np
 import polars as pl
 import xarray as xr
 
 from aia_model_contrail_avoidance.config import FLIGHT_TIMESTAMPS_SCHEMA
+from aia_model_contrail_avoidance.core_model.airports import airport_icao_code_to_location
 from aia_model_contrail_avoidance.core_model.flights import flight_distance_from_location
 
 
@@ -102,3 +104,34 @@ def generate_synthetic_flight(  # noqa: PLR0913
         },
         schema=FLIGHT_TIMESTAMPS_SCHEMA,
     )
+
+
+def generate_synthetic_flight_database(
+    flight_info_list: list[dict[str, Any]], database_name: str
+) -> None:
+    """Generate a synthetic flight database for testing purposes."""
+    flight_dataframe = pl.DataFrame()
+
+    for flight_info in flight_info_list:
+        new_flight = generate_synthetic_flight(
+            flight_info["flight_id"],
+            airport_icao_code_to_location(flight_info["departure_airport"]),
+            airport_icao_code_to_location(flight_info["arrival_airport"]),
+            flight_info["departure_time"],
+            flight_info["length_of_flight"],
+            flight_info["flight_level"],
+        )
+
+        flight_dataframe = pl.concat([flight_dataframe, new_flight], how="vertical")
+
+    flight_dataframe.write_parquet(f"data/contrails_model_data/{database_name}.parquet")
+
+def create_flight_info_list_with_time_offset(
+        number_of_flights,
+        time_offset,
+        departure_airport,
+        arrival_airport,
+        departure_time,
+        length_of_flight,
+        flight_level,
+)
