@@ -110,7 +110,7 @@ def generate_synthetic_flight(  # noqa: PLR0913
 
 def generate_synthetic_flight_database(
     flight_info_list: list[dict[str, Any]], database_name: str
-) -> None:
+) -> pl.DataFrame:
     """Generate a synthetic flight database for testing purposes."""
     flight_dataframe = pl.DataFrame()
 
@@ -127,6 +127,7 @@ def generate_synthetic_flight_database(
         flight_dataframe = pl.concat([flight_dataframe, new_flight], how="vertical")
 
     flight_dataframe.write_parquet(f"data/contrails_model_data/{database_name}.parquet")
+    return flight_dataframe
 
 
 def create_flight_info_list_with_time_offset(  # noqa: PLR0913
