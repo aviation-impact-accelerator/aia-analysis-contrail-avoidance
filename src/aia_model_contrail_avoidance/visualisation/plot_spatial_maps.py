@@ -319,3 +319,37 @@ def plot_air_traffic_density_map(
         full_html=False,
         include_plotlyjs="cdn",
     )
+
+
+def plot_cocip_grid_environment(
+    selected_time_index: int,
+    selected_flight_level_index: int,
+    environment_filename: str,
+    save_filename: str,
+) -> None:
+    """Plot the CocipGrid environment data.
+
+    Args:
+        selected_time_index: Index of the time to plot.
+        selected_flight_level_index: Index of the flight level to plot.
+        environment_filename: Filename of the saved CocipGrid environment dataset.
+        save_filename: Filename to save the plot.
+    """
+    file_path = PROJECT_ROOT / "data" / "energy_forcing_data" / f"{environment_filename}.nc"
+    grid_data = xr.open_dataset(str(file_path), engine="netcdf4")
+    plt.figure(figsize=(12, 8))
+    ef_per_m = grid_data["ef_per_m"].isel(
+        time=selected_time_index, level=selected_flight_level_index
+    )
+    ef_per_m.plot(x="longitude", y="latitude", vmin=-1e8, vmax=1e8, cmap="coolwarm")  # type: ignore[call-arg]
+
+    plt.title("CocipGrid Energy Forcing")
+    plt.xlabel("Longitude")
+    plt.ylabel("Latitude")
+
+    if save_filename:
+        output_path = PROJECT_ROOT / "results" / "plots" / f"{save_filename}.png"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        plt.savefig(str(output_path))
+    else:
+        plt.show()
