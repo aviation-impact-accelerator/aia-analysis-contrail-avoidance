@@ -26,9 +26,9 @@ MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 3.0  # nautical miles
 LOW_FLIGHT_LEVEL_THRESHOLD = 20.0  # flight level 20 = 2000 feet
 
 # Set to True to merge datapoints that are very close together in space
-BOOL_MERGE_CLOSE_POINTS = False
+BOOL_MERGE_CLOSE_POINTS = True
 # Set to True to interpolate new datapoints for flights with large distance flown in segment
-BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = False
+BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = True
 
 
 class FlightDepartureAndArrivalSubset(enum.Enum):
@@ -43,7 +43,8 @@ class TemporalFlightSubset(enum.Enum):
     """Enum for selecting subsets of flight data based on time periods."""
 
     ALL = ("all", None, None, None, None, None)
-    # Organized: name, month number, month number padded with zero, number of days in month, start day of year, end day of year
+    # Organized: name, month number, month number padded with zero, number of days in month,
+    # start day of month, end day of month
     JANUARY = ("january", 1, "01", 31, 1, 31)
     FEBRUARY = ("february", 2, "02", 29, 32, 60)
     MARCH = ("march", 3, "03", 31, 61, 91)
