@@ -5,10 +5,8 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import xarray as xr
 from pycontrails.core import MetDataset
 from pycontrails.datalib.ecmwf import ERA5
 from pycontrails.models.cocipgrid import CocipGrid
