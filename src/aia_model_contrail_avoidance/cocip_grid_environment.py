@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from pycontrails.core import MetDataset
-from pycontrails.datalib.ecmwf import ERA5
+from pycontrails.datalib.ecmwf import ERA5, ERA5ModelLevel
 from pycontrails.models.cocipgrid import CocipGrid
 from pycontrails.models.humidity_scaling import HistogramMatching
 from pycontrails.models.ps_model import PSGrid
@@ -40,12 +40,22 @@ def generate_cocip_grid_environment(
     end_time = datetime.strptime(modelling_time_bounds[1], "%Y-%m-%d %H:%M:%S")  # noqa: DTZ007
     new_end_time = (end_time + timedelta(hours=11)).strftime("%Y-%m-%d %H:%M:%S")
     weather_time_bounds = (modelling_time_bounds[0], new_end_time)
-    era5 = ERA5(
-        weather_time_bounds, pressure_levels=pressure_levels, variables=CocipGrid.met_variables
+    # Model levels 68 to 118 correspond to pressure levels from 150 hPa to 900 hPa in ERA5,
+    # which are relevant for contrail formation and persistence studies.
+    # Source https://confluence.ecmwf.int/display/UDOC/L137+model+level+definitions
+    # The exact pressure levels can be specified using the `pressure_levels` argument when initializing the ERA5ModelLevel class.
+    era5 = ERA5ModelLevel(
+        weather_time_bounds,
+        grid=1,
+        model_levels=list(range(68, 119)),
+        pressure_levels=pressure_levels,
+        variables=CocipGrid.met_variables,
     )
     met = era5.open_metdataset()
 
-    era5_rad = ERA5(weather_time_bounds, variables=CocipGrid.rad_variables)
+    era5_rad = ERA5(
+        weather_time_bounds, variables=CocipGrid.rad_variables, grid=1, pressure_levels=-1
+    )
     rad = era5_rad.open_metdataset()
 
     # Model parameters
