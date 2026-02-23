@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-import cartopy.crs as ccrs  # type: ignore[import-untyped]
+import cartopy.crs as ccrs
 import matplotlib.pyplot as plt
 import numpy as np
 import polars as pl
