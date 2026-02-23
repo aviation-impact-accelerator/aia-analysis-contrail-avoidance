@@ -47,7 +47,7 @@ def generate_cocip_grid_environment(
     era5 = ERA5ModelLevel(
         weather_time_bounds,
         grid=1,
-        model_levels=range(68, 119),
+        model_levels=list(range(68, 119)),
         pressure_levels=pressure_levels,
         variables=CocipGrid.met_variables,
     )

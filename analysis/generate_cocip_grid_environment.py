@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-import numpy as np
-
 from aia_model_contrail_avoidance.cocip_grid_environment import (
     generate_cocip_grid_environment,
 )
@@ -13,7 +11,7 @@ if __name__ == "__main__":
     modelling_time_bounds = ("2024-03-01 00:00:00", "2024-03-31 23:00:00")
     lon_bounds = (-120, 150)
     lat_bounds = (-60, 65)
-    pressure_levels = np.arange(150, 900, 10)
+    pressure_levels = tuple(range(150, 900, 10))
     # Generate CocipGrid environment
     generate_cocip_grid_environment(
         modelling_time_bounds=modelling_time_bounds,
