@@ -25,6 +25,14 @@ from aia_model_contrail_avoidance.flight_data_processing import (
 )
 from aia_model_contrail_avoidance.visualisation.generate_all_plots import generate_all_plots
 
+# USER SELECTIONS FOR ANALYSIS
+# ------------------------------------------------------------------------------
+temporal_flight_subset = TemporalFlightSubset.JANUARY
+flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
+enviornmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+spatial_granularity = SpatialGranularity.ONE_DEGREE
+# ------------------------------------------------------------------------------
+
 # Configure logging
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s: %(message)s")
 logger = logging.getLogger(__name__)
@@ -40,16 +48,11 @@ PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
 FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
 FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
 
-# user selection options
-temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
-flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
-first_day = 1
-final_day = 7
-enviornment_filename = "cocip_grid_global_week_1_coarse_pha_2024"
-energy_forcing_statistics_json = "energy_forcing_statistics_week_1_coarse_pha_2024"
+# Filenames for environment and statistics
+name, month_num, month_padded, days_in_month, *rest = temporal_flight_subset.value
+enviornment_filename = f"cocip_grid_global_month_{month_padded}_2024"
+energy_forcing_statistics_json = f"energy_forcing_statistics_month_{month_padded}_2024"
 plot_energy_forcing_statistics_json = f"results/{energy_forcing_statistics_json}.json"
-enviornmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
-spatial_granularity = SpatialGranularity.ONE_DEGREE
 
 
 def make_analysis_directories() -> None:
@@ -64,7 +67,7 @@ def make_analysis_directories() -> None:
         FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
         sys.exit(1)
 
-    # if directoy does not exist, create it
+    # if directory does not exist, create it
     if not PROCESSED_FLIGHTS_WITH_IDS_DIR.exists():
         PROCESSED_FLIGHTS_WITH_IDS_DIR.mkdir(parents=True, exist_ok=True)
         logger.info(
@@ -122,7 +125,7 @@ def remove_zone_identifier_files() -> None:
             )
             sys.exit(0)
     else:
-        logger.info("No zone identifier files found.")
+        logger.info("Ready to process...")
 
 
 def process_user_selection() -> dict[str, Any]:
@@ -166,11 +169,12 @@ def run_analysis() -> None:
             PROCESSED_FLIGHTS_INFO_DIR,
             FLIGHTS_WITH_EF_DIR,
             FLIGHTS_INFO_WITH_EF_DIR,
+            temporal_flight_subset=temporal_flight_subset,
             enviornment_filename=enviornment_filename,
         )
 
         generate_energy_forcing_statistics_from_filepath(
-            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
+            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, temporal_flight_subset
         )
         generate_all_plots(
             json_file_name=plot_energy_forcing_statistics_json,
@@ -194,11 +198,12 @@ def run_analysis() -> None:
             PROCESSED_FLIGHTS_INFO_DIR,
             FLIGHTS_WITH_EF_DIR,
             FLIGHTS_INFO_WITH_EF_DIR,
+            temporal_flight_subset=temporal_flight_subset,
             enviornment_filename=enviornment_filename,
         )
     if "Generate Energy Forcing Statistics" in answers["processing steps"]:
         generate_energy_forcing_statistics_from_filepath(
-            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
+            FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, temporal_flight_subset
         )
     if "Plots" in answers["processing steps"]:
         generate_all_plots(

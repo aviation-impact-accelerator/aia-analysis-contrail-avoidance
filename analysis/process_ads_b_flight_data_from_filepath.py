@@ -72,7 +72,7 @@ if __name__ == "__main__":
     FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_with_flight_ids"
     PROCESSED_FLIGHTS_WITH_IDS_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights"
     PROCESSED_FLIGHTS_INFO_DIR = ADS_B_ANALYSIS_DIR / "ads_b_processed_flights_info"
-    temporal_flight_subset = TemporalFlightSubset.FIRST_MONTH
+    temporal_flight_subset = TemporalFlightSubset.JANUARY
     flight_departure_and_arrival_subset = FlightDepartureAndArrivalSubset.ALL
     process_ads_b_flight_data_from_filepath(
         temporal_flight_subset,
