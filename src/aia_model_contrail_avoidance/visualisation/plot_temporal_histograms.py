@@ -85,8 +85,8 @@ def plot_contrails_formed_over_time(
             y=percentage_of_distance_forming_contrails,
             mode="lines+markers",
             name="Percentage of Distance Forming Contrails",
-            line={"color": "blue"},
-            marker={"color": "blue"},
+            line={"color": "#6a9179"},
+            marker={"color": "#6a9179"},
             customdata=labels,
             hovertemplate=(
                 f"{time_label}: %{{customdata}}<br>"
@@ -103,8 +103,8 @@ def plot_contrails_formed_over_time(
             y=air_traffic_density_per_temporal_histogram,
             mode="lines+markers",
             name="Air Traffic Density",
-            line={"color": "red"},
-            marker={"color": "red"},
+            line={"color": "#FF6F61"},
+            marker={"color": "#FF6F61"},
             customdata=labels,
             hovertemplate=(f"{time_label}: %{{customdata}}<br>Aircraft: %{{y:.0f}}<extra></extra>"),
         ),
@@ -156,7 +156,7 @@ def plot_contrails_formed_over_time(
     )
     fig.update_yaxes(
         title_text="Percentage of Distance\\ Forming Contrails (%)",
-        title_font={"color": "blue"},
+        title_font={"color": "#6a9179"},
         rangemode="tozero",
         showline=True,
         linecolor="black",
@@ -167,7 +167,7 @@ def plot_contrails_formed_over_time(
     fig.update_yaxes(
         rangemode="tozero",
         title_text="Number of Aircraft",
-        title_font={"color": "red"},
+        title_font={"color": "#FF6F61"},
         showgrid=False,
         mirror=True,
         secondary_y=True,
