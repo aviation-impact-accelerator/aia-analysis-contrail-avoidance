@@ -332,7 +332,7 @@ def plot_air_traffic_density_map(
 
 
 def plot_cocip_grid_environment(
-    selected_time: datetime.datetime,
+    selected_time: datetime.datetime | str,
     selected_flight_level: int,
     environment_filename: str,
     save_filename: str,
@@ -416,7 +416,7 @@ def plot_cocip_grid_environment(
 
 
 def plot_warming_zones_from_cocip_grid(
-    selected_time_slice: tuple[datetime.datetime, datetime.datetime],
+    selected_time_slice: tuple[datetime.datetime, datetime.datetime] | tuple[str, str],
     selected_flight_level_slice: tuple[int, int],
     environment_filename: str,
     save_filename: str,
@@ -539,9 +539,11 @@ def pressure_level_from_flight_level(flight_level: int) -> float:
     altitude_m = flight_level * 100 * 0.3048  # Convert from feet to meters
 
     # Calculate pressure at the given altitude using the barometric formula
-    return sea_level_pressure * (
-        1 - (temperature_lapse_rate * altitude_m) / sea_level_temperature
-    ) ** (gravity / (gas_constant * temperature_lapse_rate))
+    return float(
+        sea_level_pressure
+        * (1 - (temperature_lapse_rate * altitude_m) / sea_level_temperature)
+        ** (gravity / (gas_constant * temperature_lapse_rate))
+    )
 
 
 def generate_uk_airspace_geoaxes(environmental_bounds: dict[str, float]) -> GeoAxes:
