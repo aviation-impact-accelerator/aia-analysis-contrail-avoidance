@@ -70,6 +70,10 @@ strict = true
 
 [[tool.mypy.overrides]]
 module = [
+    "cartopy",
+    "cartopy.crs",
+    "cartopy.feature",
+    "cartopy.mpl.geoaxes",
     "inquirer",
     "plotly",
     "plotly.express",
