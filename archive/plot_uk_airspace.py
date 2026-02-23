@@ -4,14 +4,14 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
-import cartopy.crs as ccrs  # type: ignore  # noqa: PGH003
-import cartopy.feature as cfeature  # type: ignore  # noqa: PGH003
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 import matplotlib.pyplot as plt
 
 from aia_model_contrail_avoidance.core_model.airspace import ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
 
 if TYPE_CHECKING:
-    from cartopy.mpl.geoaxes import GeoAxes  # type: ignore # noqa: PGH003
+    from cartopy.mpl.geoaxes import GeoAxes
 
 
 def generate_uk_airspace_geoaxes(environmental_bounds: dict[str, float]) -> GeoAxes:
