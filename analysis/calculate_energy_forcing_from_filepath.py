@@ -133,6 +133,14 @@ def calculate_energy_forcing_from_filepath(  # noqa: PLR0913
 
     processed_paraquet_files = sorted(processed_flights_with_ids_dir.glob("*.parquet"))
     logger.info("Found %s files to process.", len(processed_paraquet_files))
+    if len(processed_paraquet_files) < final_day:
+        logger.info(
+            "Generating Statistics from files %s to %s.",
+            first_day,
+            len(processed_paraquet_files),
+        )
+    else:
+        logger.info("Generating Statistics from files %s to %s.", first_day, final_day)
     for file_path in processed_paraquet_files[first_day - 1 : final_day]:
         output_file_name = str(file_path.stem + "_with_ef")
         logger.info("Processing file: %s", output_file_name)
