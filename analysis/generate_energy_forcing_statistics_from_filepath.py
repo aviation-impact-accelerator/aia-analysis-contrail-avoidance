@@ -227,6 +227,37 @@ def create_histogram_air_traffic_density_over_time(
     return {str(unit): temporal_to_planes.get(unit, 0) for unit in temporal_range}
 
 
+def create_histogram_energy_forcing_by_flight_level(
+    complete_flights_dataframe: pl.DataFrame,
+) -> dict[str, float]:
+    """Calculate energy forcing by altitude histogram.
+
+    Args:
+        complete_flights_dataframe: DataFrame containing flight data with energy forcing.
+            required columns: "ef", "flight_level"
+
+    Returns:
+        Dictionary mapping altitude ranges (in flight levels) to energy forcing.
+    """
+    # Altitude bins are each 10 flight levels, from 0 to 450 (i.e. FL0-10, ..., FL440-450)
+    flight_level_bins = [(i, i + 10) for i in range(0, 450, 10)]
+    flight_level_bin_labels = [
+        f"FL{flight_level_bin[0]}-{flight_level_bin[1]}" for flight_level_bin in flight_level_bins
+    ]
+    complete_flights_dataframe = complete_flights_dataframe.with_columns(
+        pl.col("flight_level").cast(pl.Int64)
+    )
+    energy_forcing_by_flight_level_histogram = {}
+    for (lower_bound, upper_bound), label in zip(
+        flight_level_bins, flight_level_bin_labels, strict=False
+    ):
+        ef_in_bin = complete_flights_dataframe.filter(
+            pl.col("flight_level").is_between(lower_bound, upper_bound, closed="left")
+        )["ef"].sum()
+        energy_forcing_by_flight_level_histogram[label] = ef_in_bin
+    return energy_forcing_by_flight_level_histogram
+
+
 def generate_energy_forcing_statistics(
     complete_flight_dataframe: pl.DataFrame,
     output_filename: str,
@@ -449,6 +480,9 @@ def generate_energy_forcing_statistics(
         "distance_flown_by_flight_level_histogram": create_histogram_distance_flown_by_flight_level(
             complete_flight_dataframe
         ),
+        "energy_forcing_by_flight_level_histogram": create_histogram_energy_forcing_by_flight_level(
+            complete_flight_dataframe
+        ),
     }
 
     # --- Write Output ---
@@ -510,7 +544,7 @@ def generate_energy_forcing_statistics_from_filepath(
 if __name__ == "__main__":
     ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
     SAVE_FLIGHTS_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_with_ef"
-    energy_forcing_statistics_json = "energy_forcing_statistics_week_1_2024"
+    energy_forcing_statistics_json = "energy_forcing_statistics_week_1_coarse_pha_2024"
     first_day = 1
     final_day = 7
     generate_energy_forcing_statistics_from_filepath(
