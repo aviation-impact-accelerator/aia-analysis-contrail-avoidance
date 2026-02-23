@@ -19,10 +19,8 @@ if __name__ == "__main__":
         show_uk_airspace=True,
     )
     plot_warming_zones_from_cocip_grid(
-        selected_time_start="2024-01-01T00:00",
-        selected_time_end="2024-01-02T00:00",
-        selected_flight_level_top=430,
-        selected_flight_level_bottom=300,
+        selected_time_slice=("2024-01-01T00:00", "2024-01-02T00:00"),
+        selected_flight_level_slice=(430, 300),
         environment_filename="cocip_grid_global_week_1_fine_pha_2024",
         save_filename="cocip_grid_energy_forcing_warming_zones_map",
         show_uk_airspace=True,
