@@ -26,9 +26,9 @@ MAX_DISTANCE_BETWEEN_FLIGHT_TIMESTAMPS = 3.0  # nautical miles
 LOW_FLIGHT_LEVEL_THRESHOLD = 20.0  # flight level 20 = 2000 feet
 
 # Set to True to merge datapoints that are very close together in space
-BOOL_MERGE_CLOSE_POINTS = False
+BOOL_MERGE_CLOSE_POINTS = True
 # Set to True to interpolate new datapoints for flights with large distance flown in segment
-BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = False
+BOOL_INTERPOLATE_LARGE_DISTANCE_FLIGHTS = True
 
 
 class FlightDepartureAndArrivalSubset(enum.Enum):
@@ -42,8 +42,21 @@ class FlightDepartureAndArrivalSubset(enum.Enum):
 class TemporalFlightSubset(enum.Enum):
     """Enum for selecting subsets of flight data based on time periods."""
 
-    ALL = "all"
-    FIRST_MONTH = "first_month"
+    ALL = ("all", None, None, None, None, None)
+    # Organized: name, month number, month number padded with zero, number of days in month,
+    # start day of month, end day of month
+    JANUARY = ("january", 1, "01", 31, 1, 31)
+    FEBRUARY = ("february", 2, "02", 29, 32, 60)
+    MARCH = ("march", 3, "03", 31, 61, 91)
+    APRIL = ("april", 4, "04", 30, 92, 121)
+    MAY = ("may", 5, "05", 31, 122, 152)
+    JUNE = ("june", 6, "06", 30, 153, 182)
+    JULY = ("july", 7, "07", 31, 183, 213)
+    AUGUST = ("august", 8, "08", 31, 214, 244)
+    SEPTEMBER = ("september", 9, "09", 30, 245, 274)
+    OCTOBER = ("october", 10, "10", 31, 275, 305)
+    NOVEMBER = ("november", 11, "11", 30, 306, 335)
+    DECEMBER = ("december", 12, "12", 31, 336, 366)
 
 
 def process_ads_b_flight_data(
@@ -118,11 +131,15 @@ def select_subset_of_ads_b_flight_data(
     Returns:
         DataFrame containing a subset of the original ADS-B flight data.
     """
-    if temporal_subset == TemporalFlightSubset.FIRST_MONTH:
-        flight_dataframe = flight_dataframe.filter(
-            (pl.col("timestamp") >= pl.datetime(2024, 1, 1))
-            & (pl.col("timestamp") < pl.datetime(2024, 2, 1))
-        )
+    if temporal_subset != TemporalFlightSubset.ALL:
+        name, month_num, month_padded, days_in_month = temporal_subset.value[:4]
+        if month_num:
+            next_month = month_num + 1 if month_num < 12 else 1  # noqa: PLR2004
+            next_year = 2024 if month_num < 12 else 2025  # noqa: PLR2004
+            flight_dataframe = flight_dataframe.filter(
+                (pl.col("timestamp") >= pl.datetime(2024, month_num, 1))
+                & (pl.col("timestamp") < pl.datetime(next_year, next_month, 1))
+            )
 
     if departure_and_arrival_subset == FlightDepartureAndArrivalSubset.UK:
         uk_airport_icaos = list_of_uk_airports()

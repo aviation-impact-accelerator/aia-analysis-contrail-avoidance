@@ -17,6 +17,7 @@ from aia_model_contrail_avoidance.core_model.environment import (
     create_grid_environment,
     run_flight_data_through_environment,
 )
+from aia_model_contrail_avoidance.flight_data_processing import TemporalFlightSubset
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -106,11 +107,12 @@ def calculate_energy_forcing_for_flights(
     )
 
 
-def calculate_energy_forcing_from_filepath(
+def calculate_energy_forcing_from_filepath(  # noqa: PLR0913
     processed_flights_with_ids_dir: Path,
     processed_flights_info_dir: Path,
     save_flights_with_ef_dir: Path,
     save_flights_info_with_ef_dir: Path,
+    temporal_flight_subset: TemporalFlightSubset,
     enviornment_filename: str,
 ) -> None:
     """Calculate energy forcing for processed ADS-B flight data.
@@ -120,13 +122,26 @@ def calculate_energy_forcing_from_filepath(
         processed_flights_info_dir: Directory containing processed parquet files with flight information.
         save_flights_with_ef_dir: Directory to save flights with energy forcing data.
         save_flights_info_with_ef_dir: Directory to save flight information with energy forcing.
+        temporal_flight_subset: TemporalFlightSubset, the temporal subset of flights to process.
         enviornment_filename: Filename of the saved CocipGrid environment dataset to use for energy
+            forcing calculations.
     """
     start = time.time()
 
+    first_day = temporal_flight_subset.value[4]
+    final_day = temporal_flight_subset.value[5]
+
     processed_paraquet_files = sorted(processed_flights_with_ids_dir.glob("*.parquet"))
     logger.info("Found %s files to process.", len(processed_paraquet_files))
-    for file_path in processed_paraquet_files:
+    if len(processed_paraquet_files) < final_day:
+        logger.info(
+            "Generating Statistics from files %s to %s.",
+            first_day,
+            len(processed_paraquet_files),
+        )
+    else:
+        logger.info("Generating Statistics from files %s to %s.", first_day, final_day)
+    for file_path in processed_paraquet_files[first_day - 1 : final_day]:
         output_file_name = str(file_path.stem + "_with_ef")
         logger.info("Processing file: %s", output_file_name)
         # Find the matching info file with the same stem (day number)
@@ -168,5 +183,6 @@ if __name__ == "__main__":
         PROCESSED_FLIGHTS_INFO_DIR,
         SAVE_FLIGHTS_WITH_EF_DIR,
         SAVE_FLIGHTS_INFO_WITH_EF_DIR,
+        temporal_flight_subset=TemporalFlightSubset.JANUARY,
         enviornment_filename="cocip_grid_global_week_1_2024",
     )
