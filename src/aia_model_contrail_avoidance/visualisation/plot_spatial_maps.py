@@ -2,20 +2,30 @@
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import TYPE_CHECKING
 
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
+import matplotlib.pyplot as plt
 import numpy as np
+import pandas as pd
 import plotly.graph_objects as go
 import polars as pl
+import xarray as xr
 from shapely.geometry import box
 
 from aia_model_contrail_avoidance.core_model.airspace import (
+    ENVIRONMENTAL_BOUNDS_UK_AIRSPACE,
     get_gb_airspaces,
 )
 from aia_model_contrail_avoidance.core_model.dimensions import SpatialGranularity
 
 if TYPE_CHECKING:
-    from pathlib import Path
+    import datetime
+
+    from cartopy.mpl.geoaxes import GeoAxes
+
 
 # --- Constants for UK Airspace Map ---
 
@@ -319,3 +329,254 @@ def plot_air_traffic_density_map(
         full_html=False,
         include_plotlyjs="cdn",
     )
+
+
+def plot_cocip_grid_environment(
+    selected_time: datetime.datetime | str,
+    selected_flight_level: int,
+    environment_filename: str,
+    save_filename: str,
+    *,
+    show_uk_airspace: bool,
+) -> None:
+    """Plot the CocipGrid environment data.
+
+    Args:
+        selected_time: Index of the time to plot.
+        selected_flight_level: Index of the flight level to plot.
+        environment_filename: Filename of the saved CocipGrid environment dataset.
+        save_filename: Filename to save the plot.
+        show_uk_airspace: Whether to show UK airspace boundaries on the plot.
+    """
+    # load environment dataset
+
+    file_path = Path(f"data/energy_forcing_data/{environment_filename}.nc")
+    grid_data = xr.open_dataset(str(file_path), engine="netcdf4", decode_timedelta=True)
+
+    # environmental bounds for plottings
+    if show_uk_airspace:
+        environmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+    else:
+        environmental_bounds = {
+            "lat_min": float(grid_data["latitude"].min()),
+            "lat_max": float(grid_data["latitude"].max()),
+            "lon_min": float(grid_data["longitude"].min()),
+            "lon_max": float(grid_data["longitude"].max()),
+        }
+
+    # convert flight_level to index
+    pressure_level_at_selected_flight_level = pressure_level_from_flight_level(
+        selected_flight_level
+    )
+
+    # Ensure selected_time is a pandas.Timestamp for correct selection
+    if isinstance(selected_time, str):
+        selected_time = pd.to_datetime(selected_time)
+    elif hasattr(selected_time, "isoformat"):
+        selected_time = pd.to_datetime(selected_time.isoformat())
+    ef_per_m = grid_data["ef_per_m"].sel(
+        time=selected_time, level=pressure_level_at_selected_flight_level, method="nearest"
+    )
+    lat_long_matrix = ef_per_m.to_numpy()
+    # Create figure with map projection
+    geoax = generate_uk_airspace_geoaxes(environmental_bounds=environmental_bounds)
+
+    # Plot heatmap overlay on map
+    im = geoax.imshow(
+        lat_long_matrix,
+        cmap="YlOrRd",
+        aspect="auto",
+        origin="lower",
+        extent=[
+            environmental_bounds["lon_min"],
+            environmental_bounds["lon_max"],
+            environmental_bounds["lat_min"],
+            environmental_bounds["lat_max"],
+        ],
+        transform=ccrs.PlateCarree(),
+        alpha=0.7,
+    )
+
+    # Labels and title
+    geoax.set_title(
+        "CocipGrid Energy Forcing",
+        fontsize=14,
+        fontweight="bold",
+    )
+    geoax.set_xlabel("Longitude", fontsize=12)
+    geoax.set_ylabel("Latitude", fontsize=12)
+
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=geoax, orientation="vertical", pad=0.02)
+    cbar.set_label("Energy Forcing (W/m²)", fontsize=12)
+
+    # save figure
+    plt.savefig(f"results/plots/{save_filename}.png", dpi=300, bbox_inches="tight")
+    print(f"Plot saved to results/plots/{save_filename}.png")
+
+
+def plot_warming_zones_from_cocip_grid(
+    selected_time_slice: tuple[datetime.datetime, datetime.datetime] | tuple[str, str],
+    selected_flight_level_slice: tuple[int, int],
+    environment_filename: str,
+    save_filename: str,
+    *,
+    show_uk_airspace: bool,
+) -> None:
+    """Plot warming zones from CocipGrid data averaged over a time range and flight level range.
+
+    Args:
+        selected_time_slice: Tuple of (start_time, end_time) for the time range to plot.
+        selected_flight_level_slice: Tuple of (top_flight_level, bottom_flight_level) for the flight level range to plot.
+        environment_filename: Filename of the saved CocipGrid environment dataset.
+        save_filename: Filename to save the plot.
+        show_uk_airspace: Whether to show UK airspace boundaries on the plot.
+    """
+    # load environment dataset
+
+    file_path = Path(f"data/energy_forcing_data/{environment_filename}.nc")
+    grid_data = xr.open_dataset(str(file_path), engine="netcdf4", decode_timedelta=True)
+
+    # environmental bounds for plottings
+    if show_uk_airspace:
+        environmental_bounds = ENVIRONMENTAL_BOUNDS_UK_AIRSPACE
+    else:
+        environmental_bounds = {
+            "lat_min": float(grid_data["latitude"].min()),
+            "lat_max": float(grid_data["latitude"].max()),
+            "lon_min": float(grid_data["longitude"].min()),
+            "lon_max": float(grid_data["longitude"].max()),
+        }
+
+    # convert flight_level to index
+    pressure_level_at_selected_flight_level_top = pressure_level_from_flight_level(
+        selected_flight_level_slice[0]
+    )
+    pressure_level_at_selected_flight_level_bottom = pressure_level_from_flight_level(
+        selected_flight_level_slice[1]
+    )
+
+    # Ensure selected_time is a pandas.Timestamp for correct selection
+    if isinstance(selected_time_slice[0], str):
+        selected_time_start = pd.to_datetime(selected_time_slice[0])
+    elif hasattr(selected_time_slice[0], "isoformat"):
+        selected_time_start = pd.to_datetime(selected_time_slice[0].isoformat())
+
+    if isinstance(selected_time_slice[1], str):
+        selected_time_end = pd.to_datetime(selected_time_slice[1])
+    elif hasattr(selected_time_slice[1], "isoformat"):
+        selected_time_end = pd.to_datetime(selected_time_slice[1].isoformat())
+
+    # Select and average energy forcing over the specified time range and flight level range
+
+    ef_per_m = (
+        grid_data["ef_per_m"]
+        .sel(
+            time=slice(selected_time_start, selected_time_end),
+            level=slice(
+                pressure_level_at_selected_flight_level_top,
+                pressure_level_at_selected_flight_level_bottom,
+            ),
+        )
+        .mean(dim=["time", "level"])
+    )
+    lat_long_matrix = ef_per_m.to_numpy()
+    # Create figure with map projection
+    geoax = generate_uk_airspace_geoaxes(environmental_bounds=environmental_bounds)
+
+    # Plot heatmap overlay on map
+    im = geoax.imshow(
+        lat_long_matrix,
+        cmap="YlOrRd",
+        aspect="auto",
+        origin="lower",
+        extent=[
+            environmental_bounds["lon_min"],
+            environmental_bounds["lon_max"],
+            environmental_bounds["lat_min"],
+            environmental_bounds["lat_max"],
+        ],
+        transform=ccrs.PlateCarree(),
+        alpha=0.7,
+    )
+
+    # Labels and title
+    geoax.set_title(
+        "Warming Regions in Airspace (Averaged over Time and Flight Levels)",
+        fontsize=14,
+        fontweight="bold",
+    )
+    geoax.set_xlabel("Longitude", fontsize=12)
+    geoax.set_ylabel("Latitude", fontsize=12)
+
+    # Add colorbar
+    cbar = plt.colorbar(im, ax=geoax, orientation="vertical", pad=0.02)
+
+    cbar.set_label("Average Energy Forcing (W/m²)", fontsize=12)
+
+    # save figure
+    plt.savefig(f"results/plots/{save_filename}.png", dpi=300, bbox_inches="tight")
+    print(f"Plot saved to results/plots/{save_filename}.png")
+
+
+def pressure_level_from_flight_level(flight_level: int) -> float:
+    """Convert flight level to pressure level using the standard atmosphere model.
+
+    Args:
+        flight_level: Flight level in hundreds of feet (e.g., 350 for FL350).
+
+    Returns:
+        Pressure level in hPa corresponding to the given flight level.
+    """
+    # Standard atmosphere model parameters
+    sea_level_pressure = 1013.25  # hPa
+    temperature_lapse_rate = 0.0065  # K/m
+    sea_level_temperature = 288.15  # K
+    gravity = 9.80665  # m/s^2
+    gas_constant = 287.05  # J/(kg*K)
+
+    # Convert flight level to altitude in meters
+    altitude_m = flight_level * 100 * 0.3048  # Convert from feet to meters
+
+    # Calculate pressure at the given altitude using the barometric formula
+    return float(
+        sea_level_pressure
+        * (1 - (temperature_lapse_rate * altitude_m) / sea_level_temperature)
+        ** (gravity / (gas_constant * temperature_lapse_rate))
+    )
+
+
+def generate_uk_airspace_geoaxes(environmental_bounds: dict[str, float]) -> GeoAxes:
+    """Generate a GeoAxes object focused on UK airspace.
+
+    Returns:
+        GeoAxes object with UK airspace extent set.
+    """
+    geoax: GeoAxes
+    fig, geoax = plt.subplots(figsize=(12, 10), subplot_kw={"projection": ccrs.PlateCarree()})
+
+    # Set the extent to show UK airspace
+    geoax.set_extent(
+        [
+            environmental_bounds["lon_min"],
+            environmental_bounds["lon_max"],
+            environmental_bounds["lat_min"],
+            environmental_bounds["lat_max"],
+        ],
+        crs=ccrs.PlateCarree(),
+    )
+
+    # Add map features
+    geoax.coastlines(resolution="50m", linewidth=0.5)
+    geoax.add_feature(cfeature.BORDERS, linewidth=0.5)
+    geoax.add_feature(cfeature.OCEAN, facecolor="lightblue", alpha=0.5)
+    geoax.add_feature(cfeature.LAND, facecolor="lightgray", alpha=0.5)
+    geoax.add_feature(cfeature.LAKES, facecolor="lightblue", alpha=0.5)
+    geoax.add_feature(cfeature.RIVERS, linewidth=0.5)
+
+    # Add gridlines
+    gl = geoax.gridlines(draw_labels=True, linewidth=0.5, color="gray", alpha=0.7, linestyle="--")
+    gl.top_labels = False
+    gl.right_labels = False
+
+    return geoax
