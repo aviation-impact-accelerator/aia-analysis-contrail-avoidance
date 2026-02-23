@@ -9,12 +9,11 @@ import pytest
 from aia_model_contrail_avoidance.core_model.environment import (
     calculate_total_energy_forcing,
     create_grid_environment,
-    create_synthetic_grid_environment,
     run_flight_data_through_environment,
 )
-from aia_model_contrail_avoidance.core_model.flights import (
+from aia_model_contrail_avoidance.testing import (
+    create_synthetic_grid_environment,
     generate_synthetic_flight,
-    most_common_cruise_flight_level,
 )
 
 
@@ -78,7 +77,7 @@ def test_run_flight_data_through_environment() -> None:
         arrival_location=destination_location,
         departure_time=departure_time,
         length_of_flight=length_of_flight,
-        flight_level=most_common_cruise_flight_level(),
+        flight_level=300,
     )
 
     flight_with_erf = run_flight_data_through_environment(sample_flight_dataframe, environment)

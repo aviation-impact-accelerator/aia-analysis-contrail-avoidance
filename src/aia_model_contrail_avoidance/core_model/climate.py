@@ -9,10 +9,19 @@ __all__ = [
 ]
 
 # Global constants taken from literature introducing the CoCiPGrid model by Engberg et al. 2025
+WEIGHT_OF_LITRE_OF_JET_FUEL = 0.8  # kg/litre
+"""Weight of a litre of jet fuel, used to convert fuel volume to mass.
+Units: kg per litre."""
 
 CO2_PER_FUEL_MASS_BURNED = 3.16  # kg CO2 per kg fuel
 """Conversion factor from fuel mass burned to CO2 mass emitted,
 Units: kg of CO2 emitted per kg of fuel burned."""
+
+AVERAGE_FUEL_BURN_PER_FLIGHT_DISTANCE_OAG = (
+    5.0 * WEIGHT_OF_LITRE_OF_JET_FUEL
+)  # kg fuel/ nautical mile
+"""Alternative estimate of average fuel burn per flight distance for a typical commercial flight.
+Units: kg of fuel burned per nautical mile traveled by a flight."""
 
 AVERAGE_FUEL_BURN_PER_FLIGHT_DISTANCE = 11.0  # kg fuel/ nautical mile
 """ICAO estimate of average fuel burn per flight distance for a typical commercial flight.
@@ -77,7 +86,7 @@ def calculate_co2_mass_burned_from_flight_distance(distance_nm: float) -> float:
     Returns:
         The CO2 mass equivalent corresponding to the given flight distance in kilograms.
     """
-    total_mass_of_fuel_burned = distance_nm * AVERAGE_FUEL_BURN_PER_FLIGHT_DISTANCE
+    total_mass_of_fuel_burned = distance_nm * AVERAGE_FUEL_BURN_PER_FLIGHT_DISTANCE_OAG
     return total_mass_of_fuel_burned * CO2_PER_FUEL_MASS_BURNED
 
 

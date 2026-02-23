@@ -7,11 +7,8 @@ import datetime
 import polars as pl
 import pytest
 
-from aia_model_contrail_avoidance.core_model.flights import (
-    flight_distance_from_location,
-    generate_synthetic_flight,
-    most_common_cruise_flight_level,
-)
+from aia_model_contrail_avoidance.core_model.flights import flight_distance_from_location
+from aia_model_contrail_avoidance.testing import generate_synthetic_flight
 
 
 def test_flight_distance_from_location() -> None:
@@ -33,6 +30,7 @@ def test_generate_synthetic_flight() -> None:
     heathrow_airport_location = (51.4700, -0.4543)
     edinburgh_airport_location = (55.9533, -3.1883)
     expected_distance_in_nautical_miles = 288.0
+    most_common_flight_level = 300
 
     sample_flight_dataframe = generate_synthetic_flight(
         flight_id=1,
@@ -40,7 +38,7 @@ def test_generate_synthetic_flight() -> None:
         arrival_location=edinburgh_airport_location,
         departure_time=departure_time,
         length_of_flight=length_of_flight,
-        flight_level=most_common_cruise_flight_level(),
+        flight_level=most_common_flight_level,
     )
     # Check that 'departure_time' and 'timestamp' columns are of correct type (pl.Datetime)
     assert sample_flight_dataframe.schema["departure_time"] == pl.Datetime
@@ -59,4 +57,4 @@ def test_generate_synthetic_flight() -> None:
     assert sample_flight_dataframe["longitude"][-1] == pytest.approx(
         edinburgh_airport_location[1], abs=1e-4
     )
-    assert sample_flight_dataframe["flight_level"][0] == most_common_cruise_flight_level()
+    assert sample_flight_dataframe["flight_level"][0] == most_common_flight_level
