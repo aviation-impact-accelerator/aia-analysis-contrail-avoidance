@@ -21,6 +21,7 @@ from aia_model_contrail_avoidance.core_model.dimensions import (
     _get_temporal_grouping_field,
     _get_temporal_range_and_labels,
 )
+from aia_model_contrail_avoidance.flight_data_processing import TemporalFlightSubset
 
 logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(levelname)s - %(message)s")
 logger = logging.getLogger(__name__)
@@ -460,8 +461,7 @@ def generate_energy_forcing_statistics(
 def generate_energy_forcing_statistics_from_filepath(
     flights_with_ef_dir: Path,
     output_filename_json: str,
-    first_day: int,
-    final_day: int,
+    temporal_flight_subset: TemporalFlightSubset,
 ) -> None:
     """Generate energy forcing statistics from calculated energy forcing data.
 
@@ -470,16 +470,24 @@ def generate_energy_forcing_statistics_from_filepath(
           with energy forcing calculated.
         output_filename_json: Name of the output JSON file to save the statistics,
         (without extension).
-        first_day: The first day to include in the statistics.
-        final_day: The final day to include in the statistics.
+        temporal_flight_subset: TemporalFlightSubset, the temporal subset of flights to process.
     """
     start = time.time()
+    first_day = temporal_flight_subset.value[4]
+    final_day = temporal_flight_subset.value[5]
     energy_forcing_paraquet_files = sorted(
         flights_with_ef_dir.glob("UK_flights_day_00*_with_ef.parquet")
     )
     complete_flight_dataframe: pl.DataFrame = pl.DataFrame()
     logger.info("Found %s files in directory.", len(energy_forcing_paraquet_files))
-    logger.info("Generating Statistics from %s files.", final_day - first_day + 1)
+    if len(energy_forcing_paraquet_files) < final_day:
+        logger.info(
+            "Generating Statistics from files %s to %s.",
+            first_day,
+            len(energy_forcing_paraquet_files),
+        )
+    else:
+        logger.info("Generating Statistics from files %s to %s.", first_day, final_day)
     for parquet_file in energy_forcing_paraquet_files[first_day - 1 : final_day]:
         # read and append all dataframes together
         daily_dataframe = pl.read_parquet(parquet_file)
@@ -514,5 +522,7 @@ if __name__ == "__main__":
     first_day = 1
     final_day = 7
     generate_energy_forcing_statistics_from_filepath(
-        SAVE_FLIGHTS_WITH_EF_DIR, energy_forcing_statistics_json, first_day, final_day
+        SAVE_FLIGHTS_WITH_EF_DIR,
+        energy_forcing_statistics_json,
+        temporal_flight_subset=TemporalFlightSubset.JANUARY,
     )
