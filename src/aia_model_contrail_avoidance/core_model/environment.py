@@ -5,12 +5,8 @@ from __future__ import annotations
 __all__ = (
     "calculate_total_energy_forcing",
     "create_grid_environment",
-    "create_grid_environment_uk_ads_b_jan",
-    "create_synthetic_grid_environment",
     "run_flight_data_through_environment",
 )
-
-import numpy as np
 import polars as pl
 import xarray as xr
 
@@ -47,53 +43,6 @@ def create_grid_environment(environment_file_name: str) -> xr.DataArray:
     return xr.DataArray(
         environment_dataset["ef_per_m"], dims=("longitude", "latitude", "level", "time")
     )
-
-
-def create_grid_environment_uk_ads_b_jan() -> xr.DataArray:
-    """Creates grid environment from COSIP grid data."""
-    return create_grid_environment("cocip_grid_uk_airspace_jan01_2024")
-
-
-def create_synthetic_grid_environment() -> xr.DataArray:
-    """Creates a synthetic grid environment for testing."""
-    longitudes = xr.DataArray(
-        list(range(-8, 3)),  # linear increase from -8 to 2 degrees (UK airspace)
-        dims=("longitude"),
-    )
-    latitudes = xr.DataArray(
-        list(range(49, 62)),  # linear increase from 49 to 61 degrees (UK airspace)
-        dims=("latitude"),
-    )
-    levels = xr.DataArray(
-        [250, 300, 350],  # flight levels in hPa
-        dims=("level"),
-    )
-    times = xr.DataArray(
-        pl.datetime_range(
-            start=pl.datetime(2024, 1, 1),
-            end=pl.datetime(2024, 1, 1, 23),
-            interval="1h",
-            eager=True,
-        ).to_list(),
-        dims=("time"),
-    )
-
-    ef_per_m = xr.DataArray(
-        np.zeros((len(longitudes), len(latitudes), len(levels), len(times))),
-        dims=("longitude", "latitude", "level", "time"),
-        coords={
-            "longitude": longitudes,
-            "latitude": latitudes,
-            "level": levels,
-            "time": times,
-        },
-    )
-
-    # Fill with synthetic data
-    ef_per_m.loc[{"level": 300}] = 0.5
-    ef_per_m.loc[{"level": 350}] = 1.0
-
-    return ef_per_m
 
 
 def run_flight_data_through_environment(
