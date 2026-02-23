@@ -867,6 +867,57 @@
         left: 1%;
         top: 1%;
       }
+      .custom-divider {
+        width: 50%;
+        height: 4px;
+        background: var(--primary-color);
+        margin-left: 0;
+        margin-bottom: 1.5em;
+        border-radius: 2px;
+      }
+      .styled-table {
+        border-collapse: collapse;
+        margin: 0 auto;
+        font-size: 0.9em;
+        font-family: "DM Sans", sans-serif;
+        min-width: 700px;
+        box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+        background: #fff;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      .styled-table th,
+      .styled-table td {
+        padding: 14px 18px;
+        text-align: left;
+      }
+      .styled-table th {
+        background-color: var(--primary-light);
+        color: #333;
+        font-weight: 600;
+        border-bottom: 2px solid var(--primary-color);
+      }
+      .styled-table tbody tr {
+        border-bottom: 1px solid #e0e0e0;
+      }
+      .styled-table tbody tr:nth-child(even) {
+        background-color: #f7faf9;
+      }
+      .styled-table tbody tr:hover {
+        background-color: #eaf3ef;
+        transition: background 0.2s;
+      }
+      .styled-table td {
+        font-size: 0.7em; /* decrease font size for better readability */
+        color: #444;
+      }
+      #top-warming-flights-error {
+        font-family: "DM Sans", sans-serif;
+        font-size: 1.1em;
+        color: #c0392b;
+        margin-top: 1em;
+        text-align: center;
+      }
 
       @media (max-width: 768px) {
         .header {
@@ -1067,4 +1118,135 @@
       }
     </script>
   </body>
+  <div id="top-warming-flights" style="margin: 2em 0" class="custom-divider">
+    <h2
+      style="
+        font-family: &quot;DM Sans&quot;, sans-serif;
+        font-size: 2em;
+        color: var(--primary-dark);
+        margin-bottom: 0.5em;
+      "
+    >
+      Top 10 Warming Flights
+    </h2>
+    <table id="top-warming-flights-table" class="styled-table">
+      <thead>
+        <tr>
+          <th>Departure Airport</th>
+          <th>Arrival Airport</th>
+          <th>Average Energy Forcing</th>
+          <th>Total Energy Forcing</th>
+          <th>Number of Flights</th>
+          <th>% Forming Contrails</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <script>
+      // Manually input top 10 warming flights with percentage contrail flights
+      document.addEventListener("DOMContentLoaded", function () {
+        const flights = [
+          {
+            dep: "Incheon International Airport",
+            arr: "London Heathrow Airport",
+            avg: "3.32e+15",
+            total: "4.64e+16",
+            flights: 14,
+            contrail: 14,
+          },
+          {
+            dep: "Los Angeles International Airport",
+            arr: "London Heathrow Airport",
+            avg: "5.96e+14",
+            total: "4.29e+16",
+            flights: 72,
+            contrail: 59,
+          },
+          {
+            dep: "Hong Kong International Airport",
+            arr: "London Heathrow Airport",
+            avg: "4.83e+14",
+            total: "3.19e+16",
+            flights: 66,
+            contrail: 57,
+          },
+          {
+            dep: "London Heathrow Airport",
+            arr: "Hong Kong International Airport",
+            avg: "4.33e+14",
+            total: "3.16e+16",
+            flights: 73,
+            contrail: 49,
+          },
+          {
+            dep: "Tenerife South Airport",
+            arr: "Manchester Airport",
+            avg: "5.09e+14",
+            total: "3.00e+16",
+            flights: 59,
+            contrail: 45,
+          },
+          {
+            dep: "Tenerife South Airport",
+            arr: "London Gatwick Airport",
+            avg: "5.24e+14",
+            total: "2.67e+16",
+            flights: 51,
+            contrail: 34,
+          },
+          {
+            dep: "London Heathrow Airport",
+            arr: "Los Angeles International Airport",
+            avg: "2.63e+14",
+            total: "2.63e+16",
+            flights: 100,
+            contrail: 57,
+          },
+          {
+            dep: "London Stansted Airport",
+            arr: "Istanbul Sabiha Gökçen International Airport",
+            avg: "4.58e+14",
+            total: "2.56e+16",
+            flights: 56,
+            contrail: 44,
+          },
+          {
+            dep: "London Heathrow Airport",
+            arr: "John F Kennedy International Airport",
+            avg: "1.37e+14",
+            total: "2.51e+16",
+            flights: 183,
+            contrail: 101,
+          },
+          {
+            dep: "London Gatwick Airport",
+            arr: "Tenerife South Airport",
+            avg: "5.72e+14",
+            total: "2.46e+16",
+            flights: 43,
+            contrail: 27,
+          },
+        ];
+        const tableBody = document
+          .getElementById("top-warming-flights-table")
+          .getElementsByTagName("tbody")[0];
+        tableBody.innerHTML = flights
+          .map((row) => {
+            const pct =
+              row.flights > 0
+                ? ((row.contrail / row.flights) * 100).toFixed(1)
+                : "0.0";
+            return `<tr>
+            <td>${row.dep}</td>
+            <td>${row.arr}</td>
+            <td><span style='font-family:monospace;'>${row.avg}</span></td>
+            <td><span style='font-family:monospace;'>${row.total}</span></td>
+            <td>${row.flights}</td>
+            <td>${pct}%</td>
+          </tr>`;
+          })
+          .join("");
+      });
+    </script>
+  </div>
 </html>
