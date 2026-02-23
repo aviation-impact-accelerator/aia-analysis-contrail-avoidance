@@ -73,19 +73,51 @@ def airport_icao_code_to_location(
     return [(float(row["lat"]), float(row["lon"])) for row in airport_info.iter_rows(named=True)]
 
 
-def airport_name_from_icao_code(airport_icao_code: str) -> str:
-    """Get the name of the airport given its ICAO code.
+@overload
+def airport_name_from_icao_code(airport_icao_code: str) -> str: ...
+
+
+@overload
+def airport_name_from_icao_code(airport_icao_code: list[str] | pl.Series) -> list[str]: ...
+
+
+def airport_name_from_icao_code(
+    airport_icao_code: str | list[str] | pl.Series,
+) -> str | list[str]:
+    """Get the name of the airport(s) given ICAO code(s).
 
     Args:
-        airport_icao_code (str): ICAO code of the airport.
+        airport_icao_code (str | list[str] | pl.Series): ICAO code(s) of the airport(s).
 
     Returns:
-        str: Name of the airport.
+        str | list[str]: Name(s) of the airport(s).
     """
     airport_data = pl.read_parquet("data/airport_data/airports.parquet")
-    airport_info = airport_data.filter(pl.col("icao") == airport_icao_code).select(["name"])
+
+    if isinstance(airport_icao_code, str):
+        airport_info = airport_data.filter(pl.col("icao") == airport_icao_code).select(["name"])
+        if airport_info.is_empty():
+            msg = f"Airport code {airport_icao_code} not found."
+            raise ValueError(msg)
+        return str(airport_info["name"][0])
+
+    codes = (
+        airport_icao_code.to_list()
+        if isinstance(airport_icao_code, pl.Series)
+        else airport_icao_code
+    )
+    # join the airport data with the input codes to get the names
+    airport_info = (
+        pl.DataFrame({"icao": codes})
+        .join(
+            airport_data.select(["icao", "name"]),
+            on="icao",
+            how="left",
+        )
+        .select(["name"])
+    )
+
     if airport_info.is_empty():
-        msg = f"Airport code {airport_icao_code} not found."
+        msg = f"No airports found for codes: {codes}"
         raise ValueError(msg)
-    # cast to str to avoid returning Any
-    return str(airport_info["name"][0])
+    return pl.Series(airport_info["name"]).to_list()
