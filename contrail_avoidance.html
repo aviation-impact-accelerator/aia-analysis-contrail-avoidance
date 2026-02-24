@@ -932,11 +932,11 @@
     <div class="header">
       <h1>Contrail Avoidance</h1>
       <div class="tab-buttons">
-        <button class="tab-button active" onclick="switchTab('external')">
-          External
+        <button class="tab-button active" onclick="switchTab('quick_facts')">
+          Quick Facts
         </button>
-        <button class="tab-button" onclick="switchTab('internal')">
-          Internal
+        <button class="tab-button" onclick="switchTab('deep_dive')">
+          Deep Dive
         </button>
         <div class="logo">
           <img
@@ -951,12 +951,18 @@
       <h2>Policy Options Dashboard</h2>
       <div class="tab-buttons">
         <button class="tab-button active" onclick="switchTab('option1')">
-          Policy Option 1
+          2024 Baseline
         </button>
         <button class="tab-button" onclick="switchTab('option2')">
-          Policy Option 2
+          Policy Option Comparision
         </button>
         <button class="tab-button" onclick="switchTab('option3')">
+          Policy Option 1
+        </button>
+        <button class="tab-button" onclick="switchTab('option4')">
+          Policy Option 2
+        </button>
+        <button class="tab-button" onclick="switchTab('option5')">
           Policy Option 3
         </button>
       </div>
@@ -1097,6 +1103,22 @@
           "results/plots/distance_flown_by_flight_level_histogram.html",
         ],
         option3: [
+          "results/plots/distance_flown_by_flight_level_histogram.html",
+          "results/plots/energy_forcing_cumulative.html",
+          "results/plots/contrails_formed_hourly.html",
+          "results/plots/contrails_formed_daily.html",
+          "results/plots/uk_airspace_map.html",
+          "results/plots/air_traffic_density_map_uk_airspace.html",
+        ],
+        option4: [
+          "results/plots/distance_flown_by_flight_level_histogram.html",
+          "results/plots/energy_forcing_cumulative.html",
+          "results/plots/contrails_formed_hourly.html",
+          "results/plots/contrails_formed_daily.html",
+          "results/plots/uk_airspace_map.html",
+          "results/plots/air_traffic_density_map_uk_airspace.html",
+        ],
+        option5: [
           "results/plots/distance_flown_by_flight_level_histogram.html",
           "results/plots/energy_forcing_cumulative.html",
           "results/plots/contrails_formed_hourly.html",
@@ -1299,7 +1321,7 @@
                 font-size: 1em;
               "
             >
-              Top % of Flights
+              Top % of Flights Produce
             </th>
             <th
               style="
@@ -1308,7 +1330,7 @@
                 font-size: 1em;
               "
             >
-              % of Total Warming
+              Total Warming Contribution
             </th>
           </tr>
         </thead>
@@ -1401,9 +1423,9 @@
     // Example values, replace with real data if available
     // These are typical for aviation contrail warming distributions
     const warmingContribution = [
-      { pct: 20, warming: 1 },
-      { pct: 50, warming: 3 },
-      { pct: 80, warming: 20 },
+      { warming: 1, pct: 20 },
+      { warming: 3, pct: 50 },
+      { warming: 7, pct: 80 },
     ];
     const tableBody = document.getElementById(
       "warming-contribution-table-body",
@@ -1412,8 +1434,8 @@
       .map(
         (row) =>
           `<tr>
-      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; font-weight: 500;">Top ${row.pct}%</td>
-      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; color: var(--primary-dark); font-weight: 600;">${row.warming}%</td>
+      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; font-weight: 500;">${row.warming}%</td>
+      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; color: var(--primary-dark); font-weight: 600;">${row.pct}%</td>
     </tr>`,
       )
       .join("");
