@@ -181,8 +181,9 @@ def plot_contrails_formed_over_time(
             ticktext=labels,
         )
     elif temporal_granularity == TemporalGranularity.DAILY:
-        daily_tick_indices = [0, *list(range(29, len(temporal_range), 30))]
+        daily_tick_indices = list(range(0, 9, 1))
         fig.update_xaxes(
+            range=[-0.5, 8.5],
             title_text="Day of Year",
             tickmode="array",
             tickvals=daily_tick_indices,

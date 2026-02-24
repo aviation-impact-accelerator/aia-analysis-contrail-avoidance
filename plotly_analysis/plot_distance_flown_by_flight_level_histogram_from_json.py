@@ -27,6 +27,6 @@ def plot_distance_flown_by_flight_level_histogram_from_json(
 
 if __name__ == "__main__":
     plot_distance_flown_by_flight_level_histogram_from_json(
-        stats_file_path=Path("results/energy_forcing_statistics_week_1_2024.json"),
+        stats_file_path=Path("results/energy_forcing_statistics_week_1_coarse_pha_2024.json"),
         output_file="distance_flown_by_flight_level_histogram",
     )
