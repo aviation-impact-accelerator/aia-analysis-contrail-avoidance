@@ -28,6 +28,7 @@ from aia_model_contrail_avoidance.visualisation.plot_spatial_maps import (
     plot_uk_airspace_map,
 )
 from aia_model_contrail_avoidance.visualisation.plot_tabular_data import (
+    plot_co2e_gauge_chart,
     plot_top_ten_warming_flights,
 )
 from aia_model_contrail_avoidance.visualisation.plot_temporal_histograms import (
@@ -127,6 +128,10 @@ def generate_all_plots(
         flights_info_with_ef_dir,
         sort_by_total_energy_forcing=True,
         output_file="top_warming_flights",
+    )
+
+    plot_co2e_gauge_chart(
+        energy_forcing_statistics=energy_forcing_statistics, output_file="contrails_co2_comparison"
     )
 
     logger.info("Finished generating all Plotly graphs.")

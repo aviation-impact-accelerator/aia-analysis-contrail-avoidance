@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import json
 import logging
 from pathlib import Path
+from typing import Any
 
 import plotly.graph_objects as go
 import polars as pl
@@ -133,6 +135,71 @@ def plot_top_ten_warming_flights(
     )
 
 
+def plot_co2e_gauge_chart(
+    energy_forcing_statistics: dict[str, Any],
+    output_file: str = "percentage_flights_forming_contrails",
+) -> None:
+    """Plot a gauge chart showing the percentage of flights forming contrails.
+
+    Args:
+        energy_forcing_statistics: Dictionary containing energy forcing statistics.
+        output_file: Name of the output HTML file to save the plot.
+
+    """
+    total_co2_emissions = energy_forcing_statistics["emissions"][
+        "total_co2_emissions_from_fuel_burn"
+    ]
+    total_co2_equivalent_emissions_from_contrails = energy_forcing_statistics["emissions"][
+        "total_co2_equivalent_emissions_from_contrails"
+    ]
+    gauge_max = max(total_co2_emissions, total_co2_equivalent_emissions_from_contrails)
+
+    fig = go.Figure(
+        go.Indicator(
+            mode="gauge",
+            title={"text": "CO2 Equivalent Emissions Comparison"},
+            gauge={
+                "axis": {"range": [0, gauge_max], "tickformat": ".1e"},
+                "bar": {"color": "#FF6F61"},
+                "steps": [
+                    {"range": [0, total_co2_emissions], "color": "#6a9179"},
+                    {
+                        "range": [
+                            total_co2_emissions,
+                            total_co2_equivalent_emissions_from_contrails,
+                        ],
+                        "color": "#FF6F61",
+                    },  # Coral for contrails
+                ],
+                "threshold": {
+                    "line": {"color": "#2E7D32", "width": 4},
+                    "thickness": 1,
+                    "value": total_co2_emissions,
+                },
+            },
+        )
+    )
+    fig.add_annotation(
+        x=0.5,
+        y=0.15,
+        xref="paper",
+        yref="paper",
+        showarrow=False,
+        text=f"<span style='color:#6a9179'>■</span> CO2 from fuel: {total_co2_emissions:.2e} &nbsp; "
+        f"<span style='color:#FF6F61'>■</span> CO2e from contrails: {total_co2_equivalent_emissions_from_contrails:.2e}",
+        font={"size": 15},
+    )
+    fig.update_layout(margin={"l": 60, "r": 60, "t": 20, "b": 20})
+    fig.write_html(
+        f"results/plots/{output_file}.html",
+        config={
+            "displaylogo": False,
+        },
+        full_html=False,
+        include_plotlyjs="cdn",
+    )
+
+
 if __name__ == "__main__":
     ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
     FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
@@ -150,4 +217,11 @@ if __name__ == "__main__":
         FLIGHTS_INFO_WITH_EF_DIR,
         sort_by_total_energy_forcing=True,
         output_file=output_file,
+    )
+    output_file = "contrails_co2_comparison"
+    json_file_name = "results/energy_forcing_statistics_month_01_2024.json"
+    with Path(json_file_name).open() as f:
+        energy_forcing_statistics = json.load(f)
+    plot_co2e_gauge_chart(
+        energy_forcing_statistics=energy_forcing_statistics, output_file=output_file
     )
