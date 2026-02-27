@@ -179,6 +179,7 @@ def run_analysis() -> None:
         generate_all_plots(
             json_file_name=plot_energy_forcing_statistics_json,
             flights_with_ef_dir=FLIGHTS_WITH_EF_DIR,
+            flights_info_with_ef_dir=FLIGHTS_INFO_WITH_EF_DIR,
             environmental_bounds=enviornmental_bounds,
             spatial_granularity=spatial_granularity,
         )
@@ -209,6 +210,7 @@ def run_analysis() -> None:
         generate_all_plots(
             json_file_name=plot_energy_forcing_statistics_json,
             flights_with_ef_dir=FLIGHTS_WITH_EF_DIR,
+            flights_info_with_ef_dir=FLIGHTS_INFO_WITH_EF_DIR,
             environmental_bounds=enviornmental_bounds,
             spatial_granularity=spatial_granularity,
         )

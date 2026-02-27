@@ -783,6 +783,36 @@
         color: white;
       }
 
+      /* Info level buttons (Quick Facts / Deep Dive) */
+      .info-level-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .info-level-button {
+        padding: 10px 24px;
+        border: 2px solid var(--primary-color);
+        background: white;
+        cursor: pointer;
+        border-radius: 20px;
+        font-size: 14px;
+        font-weight: 600;
+        transition: all 0.3s;
+        color: var(--primary-dark);
+      }
+
+      .info-level-button:hover {
+        background: var(--primary-light);
+        color: white;
+        border-color: var(--primary-light);
+      }
+
+      .info-level-button.active {
+        background: var(--primary-color);
+        color: white;
+        border-color: var(--primary-color);
+      }
+
       .tab-content {
         display: none;
       }
@@ -931,11 +961,17 @@
   <body>
     <div class="header">
       <h1>Contrail Avoidance</h1>
-      <div class="tab-buttons">
-        <button class="tab-button active" onclick="switchTab('quick_facts')">
+      <div class="info-level-buttons">
+        <button
+          class="info-level-button active"
+          onclick="switchInfoLevel('quick_facts')"
+        >
           Quick Facts
         </button>
-        <button class="tab-button" onclick="switchTab('deep_dive')">
+        <button
+          class="info-level-button"
+          onclick="switchInfoLevel('deep_dive')"
+        >
           Deep Dive
         </button>
         <div class="logo">
@@ -1042,36 +1078,12 @@
         height: 2000px;
       "
     >
-      <iframe
-        src="results/plots/distance_flown_by_flight_level_histogram.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
-      <iframe
-        src="results/plots/energy_forcing_cumulative.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
-      <iframe
-        src="results/plots/contrails_formed_hourly.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
-      <iframe
-        src="results/plots/contrails_formed_daily.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
-      <iframe
-        src="results/plots/uk_airspace_map.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
-      <iframe
-        src="results/plots/air_traffic_density_map_uk_airspace.html"
-        style="width: 100%; height: 100%; border: none"
-        frameborder="0"
-      ></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
+      <iframe src="" style="width: 100%; height: 100%; border: none" frameborder="0"></iframe>
     </div>
 
     <script>
@@ -1084,61 +1096,103 @@
       const contrailCO2eMt = (contrailCO2e / 1e6).toFixed(2);
       const totalCO2Mt = (totalCO2 / 1e6).toFixed(2);
 
+      // Track current selections
+      let currentInfoLevel = "quick_facts";
+      let currentTab = "option1";
+
+      // Plot sets organized by info level and tab
       const plotSets = {
-        option1: [
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-          "results/plots/energy_forcing_cumulative.html",
-          "results/plots/contrails_formed_hourly.html",
-          "results/plots/contrails_formed_daily.html",
-          "results/plots/uk_airspace_map.html",
-          "results/plots/air_traffic_density_map_uk_airspace.html",
-        ],
-        option2: [
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-          "results/plots/air_traffic_density_map_uk_airspace.html",
-          "results/plots/energy_forcing_cumulative.html",
-          "results/plots/contrails_formed_hourly.html",
-          "results/plots/contrails_formed_daily.html",
-          "results/plots/uk_airspace_map.html",
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-        ],
-        option3: [
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-          "results/plots/energy_forcing_cumulative.html",
-          "results/plots/contrails_formed_hourly.html",
-          "results/plots/contrails_formed_daily.html",
-          "results/plots/uk_airspace_map.html",
-          "results/plots/air_traffic_density_map_uk_airspace.html",
-        ],
-        option4: [
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-          "results/plots/energy_forcing_cumulative.html",
-          "results/plots/contrails_formed_hourly.html",
-          "results/plots/contrails_formed_daily.html",
-          "results/plots/uk_airspace_map.html",
-          "results/plots/air_traffic_density_map_uk_airspace.html",
-        ],
-        option5: [
-          "results/plots/distance_flown_by_flight_level_histogram.html",
-          "results/plots/energy_forcing_cumulative.html",
-          "results/plots/contrails_formed_hourly.html",
-          "results/plots/contrails_formed_daily.html",
-          "results/plots/uk_airspace_map.html",
-          "results/plots/air_traffic_density_map_uk_airspace.html",
-        ],
+        quick_facts: {
+          option1: [
+            "results/plots/top_warming_flights.html",
+            "results/plots/contrails_co2_comparison.html",
+            "results/plots/percentage_warming_flights_table.html",
+            "placeholder.html",
+            "placeholder.html",
+            "placeholder.html",
+          ],
+          option2: [
+            "results/plots/top_warming_flights.html",
+            "results/plots/contrails_co2_comparison.html",
+            "results/plots/percentage_warming_flights_table.html",
+            "placeholder.html",
+            "placeholder.html",
+            "placeholder.html",
+          ],
+          option3: [
+            "results/plots/top_warming_flights.html",
+            "results/plots/contrails_co2_comparison.html",
+            "results/plots/percentage_warming_flights_table.html",
+            "placeholder.html",
+            "placeholder.html",
+            "placeholder.html",
+          ],
+          option4: [
+            "results/plots/top_warming_flights.html",
+            "results/plots/contrails_co2_comparison.html",
+            "results/plots/percentage_warming_flights_table.html",
+            "placeholder.html",
+            "placeholder.html",
+            "placeholder.html",
+          ],
+          option5: [
+            "results/plots/top_warming_flights.html",
+            "results/plots/contrails_co2_comparison.html",
+            "results/plots/percentage_warming_flights_table.html",
+            "placeholder.html",
+            "placeholder.html",
+            "placeholder.html",
+          ],
+        },
+        deep_dive: {
+          option1: [
+            "results/plots/distance_flown_by_flight_level_histogram.html",
+            "results/plots/energy_forcing_cumulative.html",
+            "results/plots/contrails_formed_hourly.html",
+            "results/plots/contrails_formed_daily.html",
+            "results/plots/uk_airspace_map.html",
+            "results/plots/air_traffic_density_map_uk_airspace.html",
+          ],
+          option2: [
+            "results/plots/distance_flown_by_flight_level_histogram.html",
+            "results/plots/energy_forcing_cumulative.html",
+            "results/plots/contrails_formed_hourly.html",
+            "results/plots/contrails_formed_daily.html",
+            "results/plots/uk_airspace_map.html",
+            "results/plots/air_traffic_density_map_uk_airspace.html",
+          ],
+          option3: [
+            "results/plots/distance_flown_by_flight_level_histogram.html",
+            "results/plots/energy_forcing_cumulative.html",
+            "results/plots/contrails_formed_hourly.html",
+            "results/plots/contrails_formed_daily.html",
+            "results/plots/uk_airspace_map.html",
+            "results/plots/air_traffic_density_map_uk_airspace.html",
+          ],
+          option4: [
+            "results/plots/distance_flown_by_flight_level_histogram.html",
+            "results/plots/energy_forcing_cumulative.html",
+            "results/plots/contrails_formed_hourly.html",
+            "results/plots/contrails_formed_daily.html",
+            "results/plots/uk_airspace_map.html",
+            "results/plots/air_traffic_density_map_uk_airspace.html",
+          ],
+          option5: [
+            "results/plots/distance_flown_by_flight_level_histogram.html",
+            "results/plots/energy_forcing_cumulative.html",
+            "results/plots/contrails_formed_hourly.html",
+            "results/plots/contrails_formed_daily.html",
+            "results/plots/uk_airspace_map.html",
+            "results/plots/air_traffic_density_map_uk_airspace.html",
+          ],
+        },
       };
 
-      function switchTab(tabId) {
-        // Remove active class from all buttons
-        document.querySelectorAll(".tab-button").forEach((btn) => {
-          btn.classList.remove("active");
-        });
-        // Add active class to clicked button
-        event.target.classList.add("active");
-
-        // Update iframe sources based on tabId
+      function updatePlots() {
         const iframes = document.querySelectorAll("#plot-container iframe");
-        const plots = plotSets[tabId] || plotSets.csv;
+        const plots =
+          plotSets[currentInfoLevel]?.[currentTab] ||
+          plotSets.quick_facts.option1;
 
         iframes.forEach((iframe, index) => {
           if (plots[index]) {
@@ -1146,298 +1200,37 @@
           }
         });
 
-        console.log("Switched to tab:", tabId);
+        console.log("Updated plots for:", currentInfoLevel, currentTab);
       }
+
+      function switchInfoLevel(infoLevel) {
+        currentInfoLevel = infoLevel;
+
+        // Remove active class from all info-level buttons
+        document.querySelectorAll(".info-level-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        // Add active class to clicked button
+        event.target.classList.add("active");
+
+        updatePlots();
+      }
+
+      function switchTab(tabId) {
+        currentTab = tabId;
+
+        // Remove active class from all tab buttons
+        document.querySelectorAll(".tab-button").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+        // Add active class to clicked button
+        event.target.classList.add("active");
+
+        updatePlots();
+      }
+
+      // Initialize plots on page load
+      document.addEventListener("DOMContentLoaded", updatePlots);
     </script>
   </body>
-  <div id="top-warming-flights" style="margin: 2em 0" class="custom-divider">
-    <h2
-      style="
-        font-family: &quot;DM Sans&quot;, sans-serif;
-        font-size: 2em;
-        color: var(--primary-dark);
-        margin-bottom: 0.5em;
-      "
-    >
-      Top 10 Warming Flights
-    </h2>
-    <table id="top-warming-flights-table" class="styled-table">
-      <thead>
-        <tr>
-          <th>Departure Airport</th>
-          <th>Arrival Airport</th>
-          <th>Average Energy Forcing</th>
-          <th>Total Energy Forcing</th>
-          <th>Number of Flights</th>
-          <th>% Forming Contrails</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-    <script>
-      // Manually input top 10 warming flights with percentage contrail flights
-      document.addEventListener("DOMContentLoaded", function () {
-        const flights = [
-          {
-            dep: "Incheon International Airport",
-            arr: "London Heathrow Airport",
-            avg: "3.32e+15",
-            total: "4.64e+16",
-            flights: 14,
-            contrail: 14,
-          },
-          {
-            dep: "Los Angeles International Airport",
-            arr: "London Heathrow Airport",
-            avg: "5.96e+14",
-            total: "4.29e+16",
-            flights: 72,
-            contrail: 59,
-          },
-          {
-            dep: "Hong Kong International Airport",
-            arr: "London Heathrow Airport",
-            avg: "4.83e+14",
-            total: "3.19e+16",
-            flights: 66,
-            contrail: 57,
-          },
-          {
-            dep: "London Heathrow Airport",
-            arr: "Hong Kong International Airport",
-            avg: "4.33e+14",
-            total: "3.16e+16",
-            flights: 73,
-            contrail: 49,
-          },
-          {
-            dep: "Tenerife South Airport",
-            arr: "Manchester Airport",
-            avg: "5.09e+14",
-            total: "3.00e+16",
-            flights: 59,
-            contrail: 45,
-          },
-          {
-            dep: "Tenerife South Airport",
-            arr: "London Gatwick Airport",
-            avg: "5.24e+14",
-            total: "2.67e+16",
-            flights: 51,
-            contrail: 34,
-          },
-          {
-            dep: "London Heathrow Airport",
-            arr: "Los Angeles International Airport",
-            avg: "2.63e+14",
-            total: "2.63e+16",
-            flights: 100,
-            contrail: 57,
-          },
-          {
-            dep: "London Stansted Airport",
-            arr: "Istanbul Sabiha Gökçen International Airport",
-            avg: "4.58e+14",
-            total: "2.56e+16",
-            flights: 56,
-            contrail: 44,
-          },
-          {
-            dep: "London Heathrow Airport",
-            arr: "John F Kennedy International Airport",
-            avg: "1.37e+14",
-            total: "2.51e+16",
-            flights: 183,
-            contrail: 101,
-          },
-          {
-            dep: "London Gatwick Airport",
-            arr: "Tenerife South Airport",
-            avg: "5.72e+14",
-            total: "2.46e+16",
-            flights: 43,
-            contrail: 27,
-          },
-        ];
-        const tableBody = document
-          .getElementById("top-warming-flights-table")
-          .getElementsByTagName("tbody")[0];
-        tableBody.innerHTML = flights
-          .map((row) => {
-            const pct =
-              row.flights > 0
-                ? ((row.contrail / row.flights) * 100).toFixed(1)
-                : "0.0";
-            return `<tr>
-            <td>${row.dep}</td>
-            <td>${row.arr}</td>
-            <td><span style='font-family:monospace;'>${row.avg}</span></td>
-            <td><span style='font-family:monospace;'>${row.total}</span></td>
-            <td>${row.flights}</td>
-            <td>${pct}%</td>
-          </tr>`;
-          })
-          .join("");
-      });
-    </script>
-  </div>
-  <div
-    id="indicator-panel"
-    style="max-width: 49%; float: right; margin-top: 2em 0"
-    class="custom-divider"
-  >
-    <h2
-      style="
-        font-family: &quot;DM Sans&quot;, sans-serif;
-        font-size: 2em;
-        color: var(--primary-dark);
-        margin-bottom: 0.5em;
-      "
-    >
-      Warming Statistics
-    </h2>
-    <div
-      id="total-co2-gauge"
-      style="float: center; margin-top: 0em; max-width: 50%; max-height: 10%"
-    ></div>
-    <div id="percentage-warming-display" style="margin-top: 2em; float: right">
-      <table
-        style="
-          margin: 0 auto;
-          border-collapse: collapse;
-          background: #fff;
-          border-radius: 10px;
-          box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
-          min-width: 340px;
-          font-family: &quot;DM Sans&quot;, sans-serif;
-        "
-      >
-        <thead>
-          <tr style="background: var(--primary-light); color: #333">
-            <th
-              style="
-                padding: 12px 18px;
-                border-bottom: 2px solid var(--primary-color);
-                font-size: 1em;
-              "
-            >
-              Top % of Flights Produce
-            </th>
-            <th
-              style="
-                padding: 12px 18px;
-                border-bottom: 2px solid var(--primary-color);
-                font-size: 1em;
-              "
-            >
-              Total Warming Contribution
-            </th>
-          </tr>
-        </thead>
-        <tbody id="warming-contribution-table-body">
-          <!-- Filled by JS -->
-        </tbody>
-      </table>
-      <div style="font-size: 0.95em; color: #666; margin-top: 0.7em">
-        <em>Most warming is caused by a small fraction of flights.</em>
-      </div>
-    </div>
-  </div>
-  <script>
-    // Gauge for Total Warming Impact
-    Plotly.newPlot(
-      "total-co2-gauge",
-      [
-        {
-          type: "indicator",
-          mode: "gauge+number",
-          value: totalCO2Mt,
-          title: {
-            text: "Total Warming Impact (million tonnes CO₂)",
-            font: {
-              size: 18,
-              color: "#333",
-              family: "DM Sans, Arial, sans-serif",
-            },
-          },
-          gauge: {
-            axis: {
-              range: [null, totalCO2Mt * 1.5],
-              tickformat: ",.0f",
-              showticklabels: true,
-              ticks: "outside",
-              showticks: true,
-              showline: false,
-            },
-            bar: { color: "transparent" },
-            steps: [
-              { range: [0, flightCO2Mt], color: "#6a9179" }, //dark green
-              {
-                range: [flightCO2Mt, totalCO2Mt],
-                color: "#ff6f61",
-              }, //cherry
-            ],
-            threshold: {
-              line: { color: "#6a9179", width: 0 },
-              thickness: 0.75,
-              value: totalCO2Mt,
-            },
-          },
-          number: { valueformat: ",.2f" },
-        },
-      ],
-      {
-        margin: { t: 40, b: 0 },
-        paper_bgcolor: "#f5f5f5",
-        annotations: [
-          {
-            x: 0.18,
-            y: 0.15,
-            xref: "paper",
-            yref: "paper",
-            text: "CO₂",
-            showarrow: false,
-            font: {
-              size: 16,
-              color: "#6a9179",
-              family: "DM Sans, Arial, sans-serif",
-            },
-          },
-          {
-            x: 0.7,
-            y: 0.15,
-            xref: "paper",
-            yref: "paper",
-            text: "Contrails",
-            showarrow: false,
-            font: {
-              size: 16,
-              color: "#ff6f61",
-              family: "DM Sans, Arial, sans-serif",
-            },
-          },
-        ],
-      },
-    );
-
-    // Example values, replace with real data if available
-    // These are typical for aviation contrail warming distributions
-    const warmingContribution = [
-      { warming: 1, pct: 20 },
-      { warming: 3, pct: 50 },
-      { warming: 7, pct: 80 },
-    ];
-    const tableBody = document.getElementById(
-      "warming-contribution-table-body",
-    );
-    tableBody.innerHTML = warmingContribution
-      .map(
-        (row) =>
-          `<tr>
-      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; font-weight: 500;">${row.warming}%</td>
-      <td style="padding: 10px 18px; border-bottom: 1px solid #eee; color: var(--primary-dark); font-weight: 600;">${row.pct}%</td>
-    </tr>`,
-      )
-      .join("");
-  </script>
 </html>
