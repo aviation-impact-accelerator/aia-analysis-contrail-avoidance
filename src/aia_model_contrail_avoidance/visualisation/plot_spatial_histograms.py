@@ -64,7 +64,6 @@ def plot_distance_flown_by_flight_level_histogram(
         plot_bgcolor="white",
         paper_bgcolor="white",
         title_text="Distance Flown and Energy Forcing by Flight Level",
-        height=800,
         yaxis={
             "title": "Distance Flown (meters)",
             "showline": True,
