@@ -296,12 +296,6 @@ def generate_energy_forcing_statistics(
     international_airspace_flights_dataframe = complete_flight_dataframe.filter(
         pl.col("airspace").is_null()
     )
-    # change datapoints in airspace as "international"
-    international_airspace_flights_dataframe = (
-        international_airspace_flights_dataframe.with_columns(
-            pl.lit("international").alias("airspace")
-        )
-    )
 
     total_energy_forcing_in_uk_airspace = uk_airspace_flights_dataframe["ef"].sum()
     total_energy_forcing_in_international_airspace = international_airspace_flights_dataframe[

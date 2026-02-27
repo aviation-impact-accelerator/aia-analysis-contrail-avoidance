@@ -1,4 +1,4 @@
-"Policy options for contrail avoidance model."
+"Policy mechanisms for contrail avoidance model."
 
 from __future__ import annotations
 
