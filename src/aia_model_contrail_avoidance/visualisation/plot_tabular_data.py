@@ -137,7 +137,7 @@ def plot_top_ten_warming_flights(
 
 def plot_co2e_gauge_chart(
     energy_forcing_statistics: dict[str, Any],
-    output_file: str = "percentage_flights_forming_contrails",
+    output_file: str = "contrails_co2_comparison",
 ) -> None:
     """Plot a gauge chart showing the percentage of flights forming contrails.
 
@@ -200,6 +200,82 @@ def plot_co2e_gauge_chart(
     )
 
 
+def plot_percentage_warming_flights(
+    energy_forcing_statistics: dict[str, Any],
+    output_file: str = "percentage_warming_flights_table",
+) -> None:
+    """Plot a table showing the percentage of flights contributing to warming.
+
+    Args:
+        energy_forcing_statistics: Dictionary containing energy forcing statistics.
+        output_file: Name of the output HTML file to save the plot.
+
+    """
+    total_number_of_flights = energy_forcing_statistics["number_of_flights"]["total"]
+    flights_for_80_percent = energy_forcing_statistics["cumulative_energy_forcing_per_flight"][
+        "number_of_flights_for_80_percent_ef"
+    ]
+    flights_for_50_percent = energy_forcing_statistics["cumulative_energy_forcing_per_flight"][
+        "number_of_flights_for_50_percent_ef"
+    ]
+    flights_for_20_percent = energy_forcing_statistics["cumulative_energy_forcing_per_flight"][
+        "number_of_flights_for_20_percent_ef"
+    ]
+
+    percent_flights_for_80_percent = (
+        f"{(flights_for_80_percent / total_number_of_flights) * 100:.2f}%"
+    )
+    percent_flights_for_50_percent = (
+        f"{(flights_for_50_percent / total_number_of_flights) * 100:.2f}%"
+    )
+    percent_flights_for_20_percent = (
+        f"{(flights_for_20_percent / total_number_of_flights) * 100:.2f}%"
+    )
+    row_colors = ["#e1eae5" if i % 2 == 0 else "#b7cdc2" for i in range(4)]
+    header_height = 42
+    cell_height = 30
+    fig = go.Figure(
+        data=[
+            go.Table(
+                header={
+                    "values": [
+                        "<b>X&#37; of Flights</b>",
+                        "<b>cause X&#37; of Energy Forcing</b>",
+                    ],
+                    "fill_color": "#6a9179",
+                    "font_color": "Black",
+                    "align": "center",
+                    "height": header_height,
+                },
+                cells={
+                    "values": [
+                        [
+                            percent_flights_for_20_percent,
+                            percent_flights_for_50_percent,
+                            percent_flights_for_80_percent,
+                        ],
+                        ["20%", "50%", "80%"],
+                    ],
+                    "fill_color": [row_colors] * 6,
+                    "font_color": "Black",
+                    "align": "center",
+                    "height": cell_height,
+                },
+            )
+        ]
+    )
+    fig.update_layout(margin={"l": 10, "r": 10, "t": 200, "b": 50})
+
+    fig.write_html(
+        f"results/plots/{output_file}.html",
+        config={
+            "displaylogo": False,
+        },
+        full_html=False,
+        include_plotlyjs="cdn",
+    )
+
+
 if __name__ == "__main__":
     ADS_B_ANALYSIS_DIR = Path("~/ads_b_analysis").expanduser()
     FLIGHTS_INFO_WITH_EF_DIR = ADS_B_ANALYSIS_DIR / "ads_b_flights_info_with_ef"
@@ -224,4 +300,9 @@ if __name__ == "__main__":
         energy_forcing_statistics = json.load(f)
     plot_co2e_gauge_chart(
         energy_forcing_statistics=energy_forcing_statistics, output_file=output_file
+    )
+
+    plot_percentage_warming_flights(
+        energy_forcing_statistics=energy_forcing_statistics,
+        output_file="percentage_warming_flights_table",
     )
